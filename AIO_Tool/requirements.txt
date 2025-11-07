@@ -1,0 +1,13 @@
+# Runtime deps
+pillow
+requests
+pyserial
+
+# esptool bundle deps (used by AIO_Tool/esptool_v41)
+reedsolo
+ecdsa
+cryptography
+
+# Build tool
+pyinstaller
+
