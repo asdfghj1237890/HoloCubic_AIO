@@ -288,8 +288,10 @@ class FileManager(object):
         self.tree.bind("<<TreeviewOpen>>", lambda event: self.tree_open())
         self.tree.bind("<Button-3>", display_op_menu)
         # text.bind("<MouseWheel>", lambda event : self.update_line())
-        self.folder_img = tk.PhotoImage(file=r"./image/folder.png")
-        self.file_img = tk.PhotoImage(file=r"./image/text_file.png")
+        folder_img_path = get_resource_path("image/folder.png")
+        file_img_path = get_resource_path("image/text_file.png")
+        self.folder_img = tk.PhotoImage(file=folder_img_path)
+        self.file_img = tk.PhotoImage(file=file_img_path)
 
         # 初始化根
         self.tree_root = self.tree.insert("", tk.END, text="内存卡文件", open=True, image=self.folder_img)

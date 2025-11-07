@@ -18,12 +18,23 @@ from page.images_converter import ImagesConverter
 from page.filemanager import FileManager
 
 import os
+import sys
 import tkinter as tk
 import util.tkutils as tku
 from tkinter import ttk
 from tkinter import messagebox
 import requests
 import re
+
+# Get the base path for resources (works for both frozen exe and script)
+def get_resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller"""
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 
 class Engine(object):
@@ -38,7 +49,9 @@ class Engine(object):
         """
         self.root = root
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
-        self.root.iconbitmap("./image/holo_256.ico")  # 窗体图标
+        icon_path = get_resource_path("image/holo_256.ico")
+        if os.path.exists(icon_path):
+            self.root.iconbitmap(icon_path)  # 窗体图标
         # 文件转化的创建输出目录
         try:
             dir_path = os.path.join("OutFile", "Cache")

@@ -14,6 +14,18 @@ import ctypes
 import inspect
 import traceback
 import re
+import sys
+import os
+
+# Get the base path for resources (works for both frozen exe and script)
+def get_resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller"""
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 TOOL_VERSION = "v1.4.9"
 ROOT_PATH = "OutFile"

@@ -37,7 +37,7 @@ class Setting(object):
         """
         self.m_engine = engine  # 负责各个组件之间数据调度的引擎
         self.__father = father  # 保存父窗口
-        self.cfg_name = "cubictool.json"  # 配置文件路径
+        self.cfg_name = common.get_resource_path("cubictool.json")  # 配置文件路径
         self.data_info = None   # 存放数据的
         self.receive_thread = None # 串口接收线程
         self.ser = None    # 串口对象
