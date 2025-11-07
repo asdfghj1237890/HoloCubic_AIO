@@ -9,6 +9,7 @@
 ################################################################################
 
 from util.common import *
+from util.i18n import get_i18n
 
 import os
 import tkinter as tk
@@ -32,6 +33,7 @@ class VideoTool(object):
         """
         self.__engine = engine  # 负责各个组件之间数据调度的引擎
         self.__father = father  # 保存父窗口
+        self.i18n = get_i18n()
 
         output_param_frame = tk.Frame(father, bg=father["bg"])
         # 路径
@@ -41,7 +43,7 @@ class VideoTool(object):
 
         # 连接器相关控件
         # 使用LabelFrame控件 框出连接相关的控件
-        self.connor_param_frame = tk.LabelFrame(output_param_frame, text="输出设置",
+        self.connor_param_frame = tk.LabelFrame(output_param_frame, text=self.i18n.t("output_settings"),
                                                 #  labelanchor="nw",
                                                 bg="white")
         # self.connor_param_frame.place(anchor="ne", relx=100.0, rely=100.0)
@@ -69,7 +71,7 @@ class VideoTool(object):
         self.m_src_path_entry.pack(side=tk.LEFT, padx=border_padx)
         # 原视频输入按钮
         self.src_path_botton = tk.Frame(father, bg=father["bg"])
-        self.src_path_botton = tk.Button(src_frame, text="选择视频", fg='black',
+        self.src_path_botton = tk.Button(src_frame, text=self.i18n.t("select_video"), fg='black',
                                          command=self.choose_src_file, width=8, height=1)
 
         self.src_path_botton.pack(side=tk.RIGHT, fill=tk.X, padx=5)
@@ -87,7 +89,7 @@ class VideoTool(object):
         self.m_dst_path_entry.insert(tk.END, defualt_outpath)
         # 原视频输入按钮
         self.dst_path_botton = tk.Frame(father, bg=father["bg"])
-        self.dst_path_botton = tk.Button(dst_frame, text="输出路径", fg='black',
+        self.dst_path_botton = tk.Button(dst_frame, text=self.i18n.t("output_path"), fg='black',
                                          command=self.choose_dst_path, width=8, height=1)
 
         self.dst_path_botton.pack(side=tk.RIGHT, fill=tk.X, padx=5)
@@ -98,7 +100,7 @@ class VideoTool(object):
         button_frame = tk.Frame(father, bg=father["bg"])
         # 转换按钮
         self.trans_botton = tk.Frame(father, bg=father["bg"])
-        self.trans_botton = tk.Button(button_frame, text="开始转换", fg='black',
+        self.trans_botton = tk.Button(button_frame, text=self.i18n.t("start_conversion"), fg='black',
                                       command=self.trans_format, width=8, height=1)
 
         self.trans_botton.pack(side=tk.TOP, fill=tk.X, padx=5)
@@ -114,13 +116,13 @@ class VideoTool(object):
         # defaultextension 为选取保存类型中的拓展名为文件名
         # filetypes为文件拓展名
         filepath = filedialog.askopenfilename(
-            title='选择一个视频文件',
+            title=self.i18n.t("select_video_title"),
             defaultextension=".espace",
             # filetypes=[('mp4', '.mp4 .MP4'), ('avi', '.avi .AVI'), 
             #     ('mov', '.mov .MOV'), ('gif', '.gif .GIF'), ('所有文件', '.* .*')]
             # )
-            filetypes=[('常用格式', '.mp4 .MP4 .avi .AVI .mov .MOV .gif .GIF'),
-                ('所有文件', '.* .*')]
+            filetypes=[(self.i18n.t("common_formats"), '.mp4 .MP4 .avi .AVI .mov .MOV .gif .GIF'),
+                (self.i18n.t("all_files"), '.* .*')]
             )
         if filepath == None or filepath == "":
             return None
@@ -147,7 +149,7 @@ class VideoTool(object):
         格式转化
         """
         cur_dir = os.getcwd()  # 当前目录
-        self.trans_botton["text"] = "正在转换"
+        self.trans_botton["text"] = self.i18n.t("converting_video")
         param = self.get_output_param()
         cmd_resize = 'ffmpeg -i "%s" -vf scale=%s:%s "%s"'  # 缩放转化
         # cmd_to_rgb 的倒数第二个参数其实没什么作用，因为rgb本身就是实际的像素点
@@ -190,7 +192,7 @@ class VideoTool(object):
         os.system(middle_cmd)
         os.system(out_cmd)
         # os.remove(video_cache)        
-        self.trans_botton["text"] = "开始转化"
+        self.trans_botton["text"] = self.i18n.t("start_conversion")
 
     def init_options(self, father):
         """
@@ -204,18 +206,18 @@ class VideoTool(object):
         self.m_radio_val = tk.IntVar()  # IntVar
         radio_frame = tk.Frame(father, bg="DimGray")
         tk.Radiobutton(radio_frame, variable=self.m_radio_val, value=0,
-                       text="默认", width=10, bg="DimGray",
+                       text=self.i18n.t("default_option"), width=10, bg="DimGray",
                        command=self.radio_select).pack(side=tk.LEFT, pady=5)
 
         tk.Radiobutton(radio_frame, variable=self.m_radio_val, value=1,
-                       text="自定义", width=10, bg="DimGray",
+                       text=self.i18n.t("custom_option"), width=10, bg="DimGray",
                        command=self.radio_select).pack(side=tk.RIGHT)
         self.m_radio_val.set(0)
         radio_frame.pack(side=tk.TOP, padx=5, fill="x")
 
         # 分辨率(长宽)
         ratio_frame = tk.Frame(father, bg=father["bg"])
-        self.m_ratio_label = tk.Label(ratio_frame, text="分辨率（宽x高）",
+        self.m_ratio_label = tk.Label(ratio_frame, text=self.i18n.t("resolution"),
                                       # font=self.my_ft1,
                                       bg=father['bg'])
         self.m_ratio_label.pack(side=tk.LEFT, padx=border_padx)
@@ -229,7 +231,7 @@ class VideoTool(object):
 
         # 帧率（fps）
         fps_frame = tk.Frame(father, bg=father["bg"])
-        self.m_fps_label = tk.Label(fps_frame, text="帧率(fps)",
+        self.m_fps_label = tk.Label(fps_frame, text=self.i18n.t("fps"),
                                     # font=self.my_ft1,
                                     bg=father['bg'])
         self.m_fps_label.pack(side=tk.LEFT, padx=border_padx)
@@ -241,7 +243,7 @@ class VideoTool(object):
         # self.m_fps_entry.bind("<Return>", self.change_val)  # 绑定enter键的触发
         self.m_fps_entry.pack(side=tk.LEFT, padx=border_padx)
         # 质量
-        self.m_quality_label = tk.Label(fps_frame, text="质量",
+        self.m_quality_label = tk.Label(fps_frame, text=self.i18n.t("quality"),
                                     # font=self.my_ft1,
                                     bg=father['bg'])
         self.m_quality_label.pack(side=tk.LEFT, padx=border_padx)
@@ -254,7 +256,7 @@ class VideoTool(object):
 
         # 格式
         format_frame = tk.Frame(father, bg=father["bg"])
-        self.m_format_label = tk.Label(format_frame, text="格式",
+        self.m_format_label = tk.Label(format_frame, text=self.i18n.t("format"),
                                        # font=self.my_ft1,
                                        bg=father['bg'])
         self.m_format_label.pack(side=tk.LEFT, padx=border_padx)

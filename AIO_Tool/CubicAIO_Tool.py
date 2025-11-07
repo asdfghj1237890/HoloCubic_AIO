@@ -16,6 +16,8 @@ from page.setting import Setting
 from page.help import Helper
 from page.images_converter import ImagesConverter 
 from page.filemanager import FileManager
+from page.tool_settings import ToolSettings
+from util.i18n import get_i18n
 
 import os
 import sys
@@ -44,15 +46,19 @@ class Engine(object):
 
     def __init__(self, root):
         """
-        引擎初始化
-        :param root:窗体控件
+        Engine initialization
+        :param root: Window widget
         """
         self.root = root
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         icon_path = get_resource_path("image/holo_256.ico")
         if os.path.exists(icon_path):
-            self.root.iconbitmap(icon_path)  # 窗体图标
-        # 文件转化的创建输出目录
+            self.root.iconbitmap(icon_path)
+        
+        # Initialize i18n
+        self.i18n = get_i18n()
+        
+        # Create output directory for file conversion
         try:
             dir_path = os.path.join("OutFile", "Cache")
             os.makedirs(dir_path)
@@ -62,42 +68,47 @@ class Engine(object):
         self.width = 700
         self.height = 500
 
-        # tk.tab   tab页面的管理器
+        # Tab manager
         self.m_tab_manager = ttk.Notebook(self.root)
 
-        # 下载调试页面
+        # Download Debug page
         self.m_debug_tab = tk.Frame(self.m_tab_manager, bg="white")
-        self.m_tab_manager.add(self.m_debug_tab, text="下载调试")
+        self.m_tab_manager.add(self.m_debug_tab, text=self.i18n.t("tab_download_debug"))
         self.m_debug_tab_windows = DownloadDebug(self.m_debug_tab, self)
 
-        # 参数设置页面
+        # Device Settings page
         self.m_setting_tab = tk.Frame(self.m_tab_manager, bg="white")
-        self.m_tab_manager.add(self.m_setting_tab, text="参数设置")
+        self.m_tab_manager.add(self.m_setting_tab, text=self.i18n.t("tab_setting"))
         self.m_setting_tab_windows = Setting(self.m_setting_tab, self)
 
-        # 文件管理页面
+        # File Manager page
         self.m_file_tab = tk.Frame(self.m_tab_manager, bg="white")
-        self.m_tab_manager.add(self.m_file_tab, text="文件管理")
+        self.m_tab_manager.add(self.m_file_tab, text=self.i18n.t("tab_file_manager"))
         self.m_file_tab_windows = FileManager(self.m_file_tab, self)
 
-        # 图片转换页面
+        # Image Converter page
         self.m_image_tab = tk.Frame(self.m_tab_manager, bg="white")
-        self.m_tab_manager.add(self.m_image_tab, text="图片转换")
-        self.m_image_tab_windows = ImagesConverter (self.m_image_tab, self)
+        self.m_tab_manager.add(self.m_image_tab, text=self.i18n.t("tab_image_converter"))
+        self.m_image_tab_windows = ImagesConverter(self.m_image_tab, self)
 
-        # 视频转码页面
+        # Video Converter page
         self.m_video_tab = tk.Frame(self.m_tab_manager, bg="white")
-        self.m_tab_manager.add(self.m_video_tab, text="视频转码")
+        self.m_tab_manager.add(self.m_video_tab, text=self.i18n.t("tab_video_converter"))
         self.m_video_tab_windows = VideoTool(self.m_video_tab, self)
 
-        # 屏幕分享页面
+        # Screen Share page
         self.m_srceen_tab = tk.Frame(self.m_tab_manager, bg="white")
-        self.m_tab_manager.add(self.m_srceen_tab, text="屏幕分享")
+        self.m_tab_manager.add(self.m_srceen_tab, text=self.i18n.t("tab_screen_share"))
 
-        # 帮助页面
+        # Help page
         self.m_help_tab = tk.Frame(self.m_tab_manager, bg="white")
-        self.m_tab_manager.add(self.m_help_tab, text="帮助")
+        self.m_tab_manager.add(self.m_help_tab, text=self.i18n.t("tab_help"))
         self.m_help_tab_windows = Helper(self.m_help_tab, self)
+
+        # Tool Settings page (new)
+        self.m_tool_settings_tab = tk.Frame(self.m_tab_manager, bg="white")
+        self.m_tab_manager.add(self.m_tool_settings_tab, text=self.i18n.t("tab_tool_settings"))
+        self.m_tool_settings_tab_windows = ToolSettings(self.m_tool_settings_tab, self)
 
         self.m_tab_manager.pack(expand=True, fill=tk.BOTH)
     
@@ -121,7 +132,7 @@ class Engine(object):
 
     def on_closing(self):
         """
-        关闭主窗口时要触发的函数
+        Trigger function when closing main window
         :return: None
         """
         if self.m_file_tab_windows != None:
@@ -139,6 +150,10 @@ class Engine(object):
         if self.m_setting_tab_windows != None:
             del self.m_setting_tab_windows
             self.m_setting_tab_windows = None
+        
+        if self.m_tool_settings_tab_windows != None:
+            del self.m_tool_settings_tab_windows
+            self.m_tool_settings_tab_windows = None
 
     def OnThreadMessage(self, fromwho, towho, action, param=None):
         """
@@ -155,7 +170,7 @@ class Engine(object):
 
     def __del__(self):
         """
-        释放资源
+        Release resources
         """
         # del self.m_debug_tab_windows
         self.m_debug_tab_windows = None
@@ -164,6 +179,10 @@ class Engine(object):
             self.m_file_tab_windows.__del__()
             del self.m_file_tab_windows
             self.m_file_tab_windows = None
+        
+        if self.m_tool_settings_tab_windows != None:
+            del self.m_tool_settings_tab_windows
+            self.m_tool_settings_tab_windows = None
 
 def get_version():
     TOOL_VERSION_INFO_URL = "http://climbsnail.cn:5001/holocubicAIO/sn/v1/version/tool"

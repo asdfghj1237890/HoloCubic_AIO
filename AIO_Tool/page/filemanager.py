@@ -16,6 +16,7 @@ from util.common import *
 from ctypes import *
 from util.file_info import *
 from util.robotsocket import *
+from util.i18n import get_i18n
 import sys
 import traceback
 
@@ -31,18 +32,19 @@ class FileManager(object):
 
     def __init__(self, father, engine, lock=None):
         """
-        FileManager 初始化
-        :param father:父类窗口
-        :param engine:引擎对象，用于推送与其他控件的请求
-        :param lock:线程锁
-        :return:None
+        FileManager initialization
+        :param father: Parent window
+        :param engine: Engine object for component communication
+        :param lock: Thread lock
+        :return: None
         """
-        self.__engine = engine  # 负责各个组件之间数据调度的引擎
-        self.__father = father  # 保存父窗口
-        self.__tree_map_file = {}  # 用于绑定文件对象与tree元素的关系 treeID->
-        self.__path_map_file = {}  # 用于绑定文件对象与tree元素的关系
+        self.__engine = engine
+        self.__father = father
+        self.__tree_map_file = {}
+        self.__path_map_file = {}
         self.__clientsocket = None
-        self.__is_freestatus = False  # 标志是否是空闲状态 False否
+        self.__is_freestatus = False
+        self.i18n = get_i18n()
 
         # 连接器相关控件
         self.m_conn_frame = tk.Frame(self.__father, bg=father["bg"])
@@ -102,15 +104,15 @@ class FileManager(object):
             print("Enter op_read_param")
             pass
 
-        # 创建文件的操作菜单
+        # Create file operation menu
         self.__file_op_menu = tk.Menu(father, tearoff=0)
-        self.__file_op_menu.add_command(label="下载", command=op_file_download)
+        self.__file_op_menu.add_command(label=self.i18n.t("download"), command=op_file_download)
         self.__file_op_menu.add_separator()
-        self.__file_op_menu.add_command(label="重命名", command=op_file_rename)
+        self.__file_op_menu.add_command(label=self.i18n.t("rename"), command=op_file_rename)
         self.__file_op_menu.add_separator()
-        self.__file_op_menu.add_command(label="删除", command=op_file_delect)
+        self.__file_op_menu.add_command(label=self.i18n.t("delete"), command=op_file_delect)
         self.__file_op_menu.add_separator()
-        self.__file_op_menu.add_command(label="属性", command=op_file_read_param)
+        self.__file_op_menu.add_command(label=self.i18n.t("properties"), command=op_file_read_param)
 
         def op_folder_upload_file():
             print("Enter op_folder_upload_file")
@@ -128,15 +130,15 @@ class FileManager(object):
             print("Enter op_folder_delect")
             pass
 
-        # 创建文件夹的操作菜单
+        # Create folder operation menu
         self.__folder_op_menu = tk.Menu(father, tearoff=0)
-        self.__folder_op_menu.add_command(label="上传文件", command=op_folder_upload_file)
+        self.__folder_op_menu.add_command(label=self.i18n.t("upload_file"), command=op_folder_upload_file)
         self.__folder_op_menu.add_separator()
-        self.__folder_op_menu.add_command(label="新建文件夹", command=op_folder_create_subfolder)
+        self.__folder_op_menu.add_command(label=self.i18n.t("new_folder"), command=op_folder_create_subfolder)
         self.__folder_op_menu.add_separator()
-        self.__folder_op_menu.add_command(label="重命名", command=op_folder_rename)
+        self.__folder_op_menu.add_command(label=self.i18n.t("rename"), command=op_folder_rename)
         self.__folder_op_menu.add_separator()
-        self.__folder_op_menu.add_command(label="删除", command=op_folder_delect)
+        self.__folder_op_menu.add_command(label=self.i18n.t("delete"), command=op_folder_delect)
 
     def init_connect(self, father):
         """
@@ -147,20 +149,16 @@ class FileManager(object):
         border_padx = 10  # 两个控件的间距
 
         ip_frame = tk.Frame(father, bg=father["bg"])
-        self.m_ip_label = tk.Label(ip_frame, text="ip地址",
-                                   # font=self.my_ft1,
+        self.m_ip_label = tk.Label(ip_frame, text=self.i18n.t("ip_address"),
                                    bg=father['bg'])
         self.m_ip_label.pack(side=tk.LEFT, padx=border_padx)
-        # 创建输入框
+        # Create input box
         self.m_ip_entry = tk.Entry(ip_frame, width=20, highlightcolor="LightGrey")
-        # self.m_ip_entry["state"] = tk.DISABLED
         self.m_ip_entry.pack(side=tk.LEFT, padx=border_padx)
-        self.m_ip_entry.delete(0, tk.END)  # 清空文本框
-        # self.m_ip_entry.insert(tk.END, "192.168.123.241:8081")
+        self.m_ip_entry.delete(0, tk.END)
         self.m_ip_entry.insert(tk.END, "本功能目前不可用")
-        # 连接按钮
-        # self.conn_botton = tk.Frame(father, bg=father["bg"])
-        self.conn_botton = tk.Button(ip_frame, text="连接", fg='black',
+        # Connect button
+        self.conn_botton = tk.Button(ip_frame, text=self.i18n.t("connect"), fg='black',
                                      command=self.connect_holocubic, width=8, height=1)
 
         self.conn_botton.pack(side=tk.RIGHT, fill=tk.X, padx=5)
@@ -294,8 +292,8 @@ class FileManager(object):
         self.file_img = tk.PhotoImage(file=file_img_path)
 
         # 初始化根
-        self.tree_root = self.tree.insert("", tk.END, text="内存卡文件", open=True, image=self.folder_img)
-        root_file = {"tree": self.tree_root, "type": "folder", "name": "内存卡文件", "path": "/", "sub_file": []}
+        self.tree_root = self.tree.insert("", tk.END, text=self.i18n.t("sd_card_files"), open=True, image=self.folder_img)
+        root_file = {"tree": self.tree_root, "type": "folder", "name": self.i18n.t("sd_card_files"), "path": "/", "sub_file": []}
         self.__tree_map_file[self.tree_root] = root_file  # 初始化总目录
         self.__path_map_file[root_file["path"]] = root_file
         self.display_path_tree(self.tree_root, root_file);

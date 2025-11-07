@@ -10,6 +10,7 @@
 
 import tkinter as tk
 import util.tkutils as tku
+from util.i18n import get_i18n
 
 
 class Helper(object):
@@ -27,6 +28,7 @@ class Helper(object):
         """
         self.m_engine = engine  # 负责各个组件之间数据调度的引擎
         self.m_father = father  # 保存父窗口
+        self.i18n = get_i18n()
         self.init_info(self.m_father)
 
     def init_info(self, father):
@@ -38,29 +40,7 @@ class Helper(object):
         info_width = father.winfo_width()
         info_height = father.winfo_height() / 2
 
-        info = '''
-        本上位机专门针对HoloCubic AIO固件开发，其中固件烧录功能兼容其他第三方固件。
-
-        加入AIO的QQ群获取相关学习资料。
-        ①群号755143193 ②群号860112883 ③群号676732387 ④群号749207817
-        注：目前4个2000人群均已满，为减少"群费"主推加入"AIO的QQ频道"，最新
-        固件优先更新在QQ频道内部。（频道号 f7nut5r3p4）
-
-        功能持续补充完善中，本上位机的所有源码均开源，欢迎大家学习，
-        也欢迎加入到AIO固件的开发队列。
-
-        观看演示链接：
-            https://www.bilibili.com/video/BV1wS4y1R7YF?p=1
-
-        了解Holocubic AIO固件
-            请访问 https://github.com/ClimbSnail/HoloCubic_AIO （最新版本）
-            或者 https://gitee.com/ClimbSnailQ/HoloCubic_AIO
-
-        了解Holocubic硬件开源方案
-            请访问 https://github.com/peng-zhihui/HoloCubic
-
-        统一资料入口 https://share.weiyun.com/alCGrwxQ
-        '''
+        info = self.i18n.t("help_info")
 
         self.m_project_info = tk.Text(father, height=45, width=140)
         self.m_project_info.tag_configure('bold_italics',

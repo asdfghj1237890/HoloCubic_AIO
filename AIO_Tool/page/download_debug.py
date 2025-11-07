@@ -9,6 +9,7 @@
 ################################################################################
 
 from util.widget_base import EntryWithPlaceholder
+from util.i18n import get_i18n
 
 import os
 import time
@@ -44,64 +45,60 @@ class DownloadDebug(object):
 
     def __init__(self, father, engine, lock=None):
         """
-        DownloadDebug初始化
-        :param father:父类窗口
-        :param engine:引擎对象，用于推送与其他控件的请求
-        :param lock:线程锁
-        :return:None
+        DownloadDebug initialization
+        :param father: Parent window
+        :param engine: Engine object for component communication
+        :param lock: Thread lock
+        :return: None
         """
-        self.__engine = engine  # 负责各个组件之间数据调度的引擎
-        self.__father = father  # 保存父窗口
-        self.ser = None  # 串口
-        self.receive_thread = None  # 串口接收线程对象
-        self.download_thread = None  # 下载线程对象
-        self.progress_bar_thread = None  # 进度条线程对象
-        self.clean_flash_thread = None # 清空flash动作线程对象
+        self.__engine = engine
+        self.__father = father
+        self.ser = None
+        self.receive_thread = None
+        self.download_thread = None
+        self.progress_bar_thread = None
+        self.clean_flash_thread = None
+        self.i18n = get_i18n()
 
-        # 连接器相关控件
-        # 使用LabelFrame控件 框出连接相关的控件
-        self.connor_grid_frame = tk.LabelFrame(self.__father, text="串口设置",
+        # Serial settings section
+        self.connor_grid_frame = tk.LabelFrame(self.__father, text=self.i18n.t("serial_settings"),
                                                labelanchor="nw", bg="white")
-        # self.connor_grid_frame.place(anchor="ne", relx=1.0, rely=0.0)
-        # self.connor_grid_frame.grid(row=0, column=1)
         self.connor_grid_frame.place(x=self.__father.winfo_width() + 10, y=10)
         self.create_com(self.connor_grid_frame)
         self.connor_grid_frame.update()
 
         # 连接器相关控件
         cur_dir = os.getcwd()
-        # 固件下载框默认值
+        # Firmware download default values
         self.__pre_down_param_list = [
             {"bin_addr": "0x1000", "bin_path": os.path.join(cur_dir, 'base_bin\\bootloader_qio_80m.bin'),
-             "placeholder": "选择Bootloader的bin文件"},
+             "placeholder": self.i18n.t("choose_bootloader")},
 
             {"bin_addr": "0x8000", "bin_path": os.path.join(cur_dir, 'base_bin\\partitions.bin'),
-             "placeholder": "选择partitions的bin文件"},
+             "placeholder": self.i18n.t("choose_partitions")},
 
             {"bin_addr": "0xe000", "bin_path": os.path.join(cur_dir, 'base_bin\\boot_app0.bin'),
-             "placeholder": "选择boot_app0的bin文件"},
+             "placeholder": self.i18n.t("choose_boot_app0")},
 
             {"bin_addr": "0x10000", "bin_path": "",
-             "placeholder": "选择user_data的bin文件(AIO固件必选项)"}
+             "placeholder": self.i18n.t("choose_firmware")}
         ]
-        # 使用LabelFrame控件 框出刷写的控件
-        self.connor_firmware_frame = tk.LabelFrame(self.__father, text="固件刷写",
+        # Firmware flash section
+        self.connor_firmware_frame = tk.LabelFrame(self.__father, text=self.i18n.t("firmware_flash"),
                                                    labelanchor="nw", bg="white")
         self.connor_firmware_frame.place(x=200, y=10)
         self.connor_firmware_frame.update()
         self.init_firmware(self.connor_firmware_frame)
 
-        # 连接器相关控件
-        # 使用LabelFrame控件 框出日志相关的控件
-        self.connor_log_frame = tk.LabelFrame(self.__father, text="操作日志",
+        # Operation log section
+        self.connor_log_frame = tk.LabelFrame(self.__father, text=self.i18n.t("operation_log"),
                                               labelanchor="nw", bg="white")
         self.connor_log_frame.place(x=685, y=10)
         self.connor_log_frame.update()
         self.init_log(self.connor_log_frame)
 
-        # 连接器相关控件
-        # 使用LabelFrame控件 框出连接相关的控件
-        self.connor_info_frame = tk.LabelFrame(self.__father, text="串口接收",
+        # Serial receive section
+        self.connor_info_frame = tk.LabelFrame(self.__father, text=self.i18n.t("serial_receive"),
                                                labelanchor="nw", bg="white")
         self.connor_info_frame.place(x=self.__father.winfo_width() + 10, y=240)
         self.connor_info_frame.update()
@@ -128,7 +125,7 @@ class DownloadDebug(object):
             self.m_version_var.set(version_info[0].split(" ")[1])
         except Exception as err:
             print(err)
-            self.m_version_var.set("未知")
+            self.m_version_var.set(self.i18n.t("unknown"))
 
     def init_firmware(self, father):
         """
@@ -179,7 +176,7 @@ class DownloadDebug(object):
             self.__firmware_path_entry[pos].pack(side=tk.LEFT, padx=border_padx)
             self.__firmware_path_entry[pos].refresh()
             # 选择按钮
-            self.__firmware_choose_botton[pos] = tk.Button(firmware_frame[pos], text="选择", fg='black',
+            self.__firmware_choose_botton[pos] = tk.Button(firmware_frame[pos], text=self.i18n.t("select_button"), fg='black',
                                                            command=lambda: self.choose_file(pos.copy()), width=6, height=1)
 
             self.__firmware_choose_botton[pos].pack(side=tk.RIGHT, fill=tk.X, padx=5)
@@ -206,21 +203,21 @@ class DownloadDebug(object):
         # botton组件
         botton_group_frame = tk.Frame(father, bg=father["bg"])
 
-        version_text = tk.Label(botton_group_frame, text="AIO最新版本", bg=botton_group_frame['bg'])
+        version_text = tk.Label(botton_group_frame, text=self.i18n.t("aio_latest_version"), bg=botton_group_frame['bg'])
         version_text.pack(side=tk.LEFT)
         # 创建宽输入框
         self.m_version_var = tk.StringVar()
         self.m_version_info = EntryWithPlaceholder(botton_group_frame, width=6, highlightcolor="LightGrey",
-                                                  placeholder="未知", placeholder_color="grey",
+                                                  placeholder=self.i18n.t("unknown"), placeholder_color="grey",
                                                   textvariable=self.m_version_var)
         self.m_version_info.pack(side=tk.LEFT, padx=5)
 
-        # 清空按钮
-        self.m_clean_flash_botton = tk.Button(botton_group_frame, text="清空芯片", fg='black',
+        # Clear button
+        self.m_clean_flash_botton = tk.Button(botton_group_frame, text=self.i18n.t("clear_chip"), fg='black',
                                               command=self.clean_flash, width=8, height=1)
         self.m_clean_flash_botton.pack(side=tk.LEFT, fill=tk.X, padx=border_padx)
-        # 下载按钮
-        self.m_download_botton = tk.Button(botton_group_frame, text="刷写固件", fg='black',
+        # Download button
+        self.m_download_botton = tk.Button(botton_group_frame, text=self.i18n.t("flash_firmware"), fg='black',
                                            command=self.down_and_canle, width=8, height=1)
 
         self.m_download_botton.pack(side=tk.RIGHT, fill=tk.X, padx=0)
@@ -259,7 +256,7 @@ class DownloadDebug(object):
         # defaultextension 为选取保存类型中的拓展名为文件名
         # filetypes为文件拓展名
         filepath = filedialog.askopenfilename(
-            title='选择一个bin文件',
+            title=self.i18n.t("select_bin_file"),
             defaultextension=".espace",
             filetypes=[('BIN', '.bin .Bin')])
         if filepath == None or filepath == "":
@@ -314,9 +311,9 @@ class DownloadDebug(object):
         """
         下载与取消按钮
         """
-        if self.m_download_botton["text"] == "刷写固件":
+        if self.m_download_botton["text"] == self.i18n.t("flash_firmware"):
             self.download_firmware()
-        elif self.m_download_botton["text"] == "取消下载":
+        elif self.m_download_botton["text"] == self.i18n.t("cancel_flash"):
             self.canle_download_firmware()
 
     def canle_download_firmware(self):
@@ -331,7 +328,7 @@ class DownloadDebug(object):
             except Exception as err:
                 print(err)
 
-        self.m_download_botton["text"] = "刷写固件"
+        self.m_download_botton["text"] = self.i18n.t("flash_firmware")
         self.m_connect_button["state"] = tk.NORMAL
         self.m_reboot_button["state"] = tk.NORMAL
         self.m_clean_flash_botton["state"] = tk.NORMAL
@@ -352,12 +349,12 @@ class DownloadDebug(object):
         """
         下载固件
         """
-        self.m_download_botton["text"] = "取消下载"
+        self.m_download_botton["text"] = self.i18n.t("cancel_flash")
         self.m_connect_button["state"] = tk.DISABLED
         self.m_reboot_button["state"] = tk.DISABLED
         self.m_clean_flash_botton["state"] = tk.DISABLED
         self.m_download_botton["state"] = tk.NORMAL
-        self.print_log("刷写中.....")
+        self.print_log(self.i18n.t("flashing"))
         down_flag, param = self.get_download_param()
         if down_flag == "disable":
             self.print_log("参数错误，刷写终止！")
@@ -402,7 +399,7 @@ class DownloadDebug(object):
 
         ret = esptool.main(cmd)
 
-        self.m_download_botton["text"] = "刷写固件"
+        self.m_download_botton["text"] = self.i18n.t("flash_firmware")
         self.m_connect_button["state"] = tk.NORMAL
         self.m_reboot_button["state"] = tk.NORMAL
         self.m_clean_flash_botton["state"] = tk.NORMAL
@@ -419,7 +416,7 @@ class DownloadDebug(object):
         # 复位进度条
         self.progress_bar.coords(self.progress_bar_fill, (3, 3, 0, 25))
 
-        self.print_log("刷写固件成功！")
+        self.print_log(self.i18n.t("flash_success"))
 
     def init_log(self, father):
         """
@@ -507,83 +504,74 @@ class DownloadDebug(object):
         if len(com_tuple) == 0:
             com_tuple = [""]
 
-        border_padx = 15  # 两个控件的间距
-        # 窗口
+        border_padx = 15
+        # Port selection
         com_frame = tk.Frame(father, bg=father["bg"])
-        self.m_com_label = tk.Label(com_frame, text="端口号",
-                                    # font=self.my_ft1,
+        self.m_com_label = tk.Label(com_frame, text=self.i18n.t("port_number"),
                                     bg=father['bg'])
         self.m_com_label.pack(side=tk.LEFT, padx=border_padx)
 
         self.m_com_select = ttk.Combobox(com_frame, width=8, state='readonly')
         self.m_com_select["value"] = tuple(com_tuple)
         self.m_com_select.bind("<FocusOut>", self.com_pull_down)
-
-        # 设置默认值，即默认下拉框中的内容
         self.m_com_select.current(0)
         self.m_com_select.pack(side=tk.RIGHT, padx=border_padx)
         com_frame.pack(side=tk.TOP, pady=5)
 
-        # 波特率
+        # Baud rate
         baud_frame = tk.Frame(father, bg=father["bg"])
-        self.m_baud_label = tk.Label(baud_frame, text="波特率",
-                                     # font=self.my_ft1,
+        self.m_baud_label = tk.Label(baud_frame, text=self.i18n.t("baud_rate"),
                                      bg=father['bg'])
         self.m_baud_label.pack(side=tk.LEFT, padx=border_padx)
         self.m_baud_select = ttk.Combobox(baud_frame, width=8, state='readonly')
         self.m_baud_select["value"] = ('9600', '38400', '57600', '115200',
                                        '230400', '460800', '576000', '921600', '1152000')
-        # 设置默认值，即默认下拉框中的内容
         self.m_baud_select.current(7)
         self.m_baud_select.pack(side=tk.RIGHT, padx=border_padx)
         baud_frame.pack(side=tk.TOP, pady=5)
 
-        # 数据位
+        # Data bit
         data_bit_frame = tk.Frame(father, bg=father["bg"])
-        self.m_data_bit_label = tk.Label(data_bit_frame, text="数据位",
-                                         # font=self.my_ft1,
+        self.m_data_bit_label = tk.Label(data_bit_frame, text=self.i18n.t("data_bit"),
                                          bg=father['bg'])
         self.m_data_bit_label.pack(side=tk.LEFT, padx=border_padx)
         self.m_data_bit_select = ttk.Combobox(data_bit_frame, width=8, state='readonly')
         self.m_data_bit_select["value"] = ('5', '6', '7', '8')
-        # 设置默认值，即默认下拉框中的内容
         self.m_data_bit_select.current(3)
         self.m_data_bit_select.pack(side=tk.RIGHT, padx=border_padx)
         data_bit_frame.pack(side=tk.TOP, pady=5)
 
-        # 校验位
+        # Parity
         check_bit_frame = tk.Frame(father, bg=father["bg"])
-        self.m_check_bit_label = tk.Label(check_bit_frame, text="校验位",
-                                          # font=self.my_ft1,
+        self.m_check_bit_label = tk.Label(check_bit_frame, text=self.i18n.t("check_bit"),
                                           bg=father['bg'])
         self.m_check_bit_label.pack(side=tk.LEFT, padx=border_padx)
         self.m_check_bit_select = ttk.Combobox(check_bit_frame, width=8, state='readonly')
-        self.m_check_bit_select["value"] = ('无校验', '奇校验', '偶校验', '0校验', '1校验')
-        # 设置默认值，即默认下拉框中的内容
+        self.m_check_bit_select["value"] = (self.i18n.t("no_check"), self.i18n.t("odd_check"), 
+                                            self.i18n.t("even_check"), self.i18n.t("zero_check"), 
+                                            self.i18n.t("one_check"))
         self.m_check_bit_select.current(0)
         self.m_check_bit_select.pack(side=tk.RIGHT, padx=border_padx)
         check_bit_frame.pack(side=tk.TOP, pady=5)
 
-        # 停止位
+        # Stop bit
         stop_bit_frame = tk.Frame(father, bg=father["bg"])
-        self.m_stop_bit_label = tk.Label(stop_bit_frame, text="停止位",
-                                         # font=self.my_ft1,
+        self.m_stop_bit_label = tk.Label(stop_bit_frame, text=self.i18n.t("stop_bit"),
                                          bg=father['bg'])
         self.m_stop_bit_label.pack(side=tk.LEFT, padx=border_padx)
         self.m_stop_bit_select = ttk.Combobox(stop_bit_frame, width=8, state='readonly')
-        self.m_stop_bit_select["value"] = ('1位', '1.5位', '2位')
-        # 设置默认值，即默认下拉框中的内容
+        self.m_stop_bit_select["value"] = (self.i18n.t("one_bit"), self.i18n.t("one_half_bit"), 
+                                           self.i18n.t("two_bit"))
         self.m_stop_bit_select.current(0)
         self.m_stop_bit_select.pack(side=tk.RIGHT, padx=border_padx)
         stop_bit_frame.pack(side=tk.TOP, pady=5)
 
-        # 启停按钮
+        # Buttons
         botton_frame = tk.Frame(father, bg=father["bg"])
-        self.m_connect_button = tk.Button(botton_frame, text="打开串口", fg='black',
+        self.m_connect_button = tk.Button(botton_frame, text=self.i18n.t("open_serial"), fg='black',
                                           command=self.com_connect, width=12, height=1)
         self.m_connect_button.pack(side=tk.LEFT, fill=tk.X, padx=5)
-        # 重启按钮
-        self.m_reboot_button = tk.Button(botton_frame, text="重启", fg='black',
+        self.m_reboot_button = tk.Button(botton_frame, text=self.i18n.t("reboot"), fg='black',
                                          command=self.esp_reset, width=8, height=1)
         self.m_reboot_button.pack(side=tk.RIGHT, fill=tk.X, padx=5)
         self.m_reboot_button["state"] = tk.NORMAL
@@ -612,21 +600,21 @@ class DownloadDebug(object):
     def com_connect(self):
         global STRGLO, BOOL
 
-        if self.m_connect_button["text"] == "打开串口":
+        if self.m_connect_button["text"] == self.i18n.t("open_serial"):
 
             down_flag, param = self.get_download_param()
             if self.ser != None:
-                self.ser.close()  # 关闭串口
+                self.ser.close()
             self.ser = serial.Serial(param["port"], param["baud"], timeout=10)
 
-            # 判断是否打开成功
+            # Check if opened successfully
             if self.ser.is_open:
-                BOOL = True  # 读取标志位
+                BOOL = True
                 self.receive_thread = threading.Thread(target=self.read_data,
                                                        args=(self.ser,))
                 self.receive_thread.start()
 
-                self.m_connect_button["text"] = "关闭串口"
+                self.m_connect_button["text"] = self.i18n.t("close_serial")
                 self.m_com_select["state"] = tk.DISABLED
                 self.m_baud_select["state"] = tk.DISABLED
                 self.m_data_bit_select["state"] = tk.DISABLED
@@ -636,7 +624,7 @@ class DownloadDebug(object):
                 self.m_clean_flash_botton["state"] = tk.DISABLED
                 self.m_download_botton["state"] = tk.DISABLED
         else:
-            self.m_connect_button["text"] = "打开串口"
+            self.m_connect_button["text"] = self.i18n.t("open_serial")
             self.m_com_select["state"] = tk.NORMAL
             self.m_baud_select["state"] = tk.NORMAL
             self.m_data_bit_select["state"] = tk.NORMAL

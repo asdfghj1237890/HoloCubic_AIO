@@ -16,10 +16,11 @@ import codecs
 import threading
 import util.common as common
 import util.massagehead as mh
-import serial   # pip install pyserial
+import serial
 import time
 import struct
 import traceback
+from util.i18n import get_i18n
 
 
 class Setting(object):
@@ -29,39 +30,33 @@ class Setting(object):
 
     def __init__(self, father, engine, lock=None):
         """
-        DownloadDebug初始化
-        :param father:父类窗口
-        :param engine:引擎对象，用于推送与其他控件的请求
-        :param lock:线程锁
-        :return:None
+        Setting initialization
+        :param father: Parent window
+        :param engine: Engine object for component communication
+        :param lock: Thread lock
+        :return: None
         """
-        self.m_engine = engine  # 负责各个组件之间数据调度的引擎
-        self.__father = father  # 保存父窗口
-        self.cfg_name = common.get_resource_path("cubictool.json")  # 配置文件路径
-        self.data_info = None   # 存放数据的
-        self.receive_thread = None # 串口接收线程
-        self.ser = None    # 串口对象
+        self.m_engine = engine
+        self.__father = father
+        self.cfg_name = common.get_resource_path("cubictool.json")
+        self.data_info = None
+        self.receive_thread = None
+        self.ser = None
+        self.i18n = get_i18n()
 
         fp = codecs.open(self.cfg_name, "r", "utf8")
         self.data_info = json.load(fp)
         fp.close()
-        # print(self.data_info)
 
-        # 创建配置文件
-        # self.createConfig(self.cfg_name)
-
-        # 串口连接
+        # Serial connection
         self.uart_father = tk.Frame(self.__father, bg=self.__father["bg"])
         self.uart_father.place(x=self.__father.winfo_width() + 250, y=10)
         self.connect_uart(self.uart_father)
         self.uart_father.update()
 
-        # wifi设置框
-        # 使用LabelFrame控件 框出连接相关的控件
-        self.wifi_grid_frame = tk.LabelFrame(self.__father, text="WIFI设置",
+        # WiFi settings frame
+        self.wifi_grid_frame = tk.LabelFrame(self.__father, text=self.i18n.t("wifi_settings"),
                                                labelanchor="nw", bg="white")
-        # self.wifi_grid_frame.place(anchor="ne", relx=1.0, rely=0.0)
-        # self.wifi_grid_frame.grid(row=0, column=1)
         self.wifi_grid_frame.place(x=self.__father.winfo_width() + 10, y=10)
         self.create_wifi(self.wifi_grid_frame)
         self.wifi_grid_frame.update()
@@ -109,40 +104,35 @@ class Setting(object):
         if len(com_tuple) == 0:
             com_tuple = [""]
 
-        border_padx = 15  # 两个控件的间距
-        # 窗口
+        border_padx = 15
+        # Port selection
         com_frame = tk.Frame(father, bg=father["bg"])
-        self.m_com_label = tk.Label(com_frame, text="端口号",
-                                    # font=self.my_ft1,
+        self.m_com_label = tk.Label(com_frame, text=self.i18n.t("port_number"),
                                     bg=father['bg'])
         self.m_com_label.pack(side=tk.LEFT, padx=border_padx)
 
         self.m_com_select = ttk.Combobox(com_frame, width=8, state='readonly')
         self.m_com_select["value"] = tuple(com_tuple)
         self.m_com_select.bind("<FocusOut>", self.com_pull_down)
-
-        # 设置默认值，即默认下拉框中的内容
         self.m_com_select.current(0)
         self.m_com_select.pack(side=tk.LEFT, padx=border_padx)
         com_frame.pack(side=tk.LEFT, pady=5)
 
-        # 波特率
+        # Baud rate
         baud_frame = tk.Frame(father, bg=father["bg"])
-        self.m_baud_label = tk.Label(baud_frame, text="波特率",
-                                     # font=self.my_ft1,
+        self.m_baud_label = tk.Label(baud_frame, text=self.i18n.t("baud_rate"),
                                      bg=father['bg'])
         self.m_baud_label.pack(side=tk.LEFT, padx=border_padx)
         self.m_baud_select = ttk.Combobox(baud_frame, width=8, state='readonly')
         self.m_baud_select["value"] = ('9600', '38400', '57600', '115200',
                                        '230400', '460800', '576000', '921600', '1152000')
-        # 设置默认值，即默认下拉框中的内容
         self.m_baud_select.current(3)
         self.m_baud_select.pack(side=tk.LEFT, padx=border_padx)
         baud_frame.pack(side=tk.LEFT, pady=5)
 
-        # 启停按钮
+        # Connect button
         botton_frame = tk.Frame(father, bg=father["bg"])
-        self.m_connect_button = tk.Button(botton_frame, text="打开串口", fg='black',
+        self.m_connect_button = tk.Button(botton_frame, text=self.i18n.t("open_serial"), fg='black',
                                           command=self.com_connect, width=12, height=1)
         self.m_connect_button.pack(side=tk.LEFT, fill=tk.X, padx=5)
 
@@ -174,7 +164,7 @@ class Setting(object):
         # 先关闭下载页的串口
         self.m_engine.OnThreadMessage(mh.M_SETTING, mh.M_DOWNLOAD_DEBUG, mh.A_CLOSE_UART, None)
         
-        if self.m_connect_button["text"] == "打开串口":
+        if self.m_connect_button["text"] == self.i18n.t("open_serial"):
 
             port = self.m_com_select.get().strip()
             baud = self.m_baud_select.get().strip()
@@ -189,11 +179,11 @@ class Setting(object):
                                                     args=(self.ser,))
                 self.receive_thread.start()
 
-                self.m_connect_button["text"] = "关闭串口"
+                self.m_connect_button["text"] = self.i18n.t("close_serial")
                 self.m_com_select["state"] = tk.DISABLED
                 self.m_baud_select["state"] = tk.DISABLED
         else:
-            self.m_connect_button["text"] = "打开串口"
+            self.m_connect_button["text"] = self.i18n.t("open_serial")
             self.m_com_select["state"] = tk.NORMAL
             self.m_baud_select["state"] = tk.NORMAL
 
@@ -301,7 +291,7 @@ class Setting(object):
         :return: None
         """
         # 选择按钮
-        get_botton = tk.Button(father, text="获取", fg='black',
+        get_botton = tk.Button(father, text=self.i18n.t("get_button"), fg='black',
                                 command=lambda: self.get_param("ssid"),
                                 width=6, height=1)
         get_botton.pack(side=tk.RIGHT, fill=tk.X, padx=5)

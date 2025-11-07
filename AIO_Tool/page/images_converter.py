@@ -13,6 +13,7 @@ from util.common import *
 from util.widget_base import EntryWithPlaceholder
 from util.convertor_core import Converter
 from util.convertor_core import _const
+from util.i18n import get_i18n
 import util.tkutils as tku
 
 import tkinter as tk
@@ -65,6 +66,7 @@ class ImagesConverter(object):
         """
         self.__engine = engine  # 负责各个组件之间数据调度的引擎
         self.__father = father  # 保存父窗口
+        self.i18n = get_i18n()
 
         self.m_select_frame = tk.Frame(self.__father, bg=father["bg"])
         self.init_setting(self.m_select_frame)
@@ -86,7 +88,7 @@ class ImagesConverter(object):
         """
         border_padx = 15  # 两个控件的间距
 
-        self.m_jpg_label = tk.Label(father, text="JPG格式输出",
+        self.m_jpg_label = tk.Label(father, text=self.i18n.t("jpg_output"),
                                     # font=self.my_ft1,
                                     bg=father['bg'])
         self.m_jpg_label.pack(side=tk.LEFT)
@@ -101,7 +103,7 @@ class ImagesConverter(object):
         self.__jpg_enable.pack(side=tk.LEFT)
         # 色彩格式
         color_frame = tk.Frame(father, bg=father["bg"])
-        self.m_color_label = tk.Label(color_frame, text="ColorFormat",
+        self.m_color_label = tk.Label(color_frame, text=self.i18n.t("color_format"),
                                       # font=self.my_ft1,
                                       bg=father['bg'])
         self.m_color_label.pack(side=tk.LEFT)
@@ -120,7 +122,7 @@ class ImagesConverter(object):
 
         # 输出格式
         output_frame = tk.Frame(father, bg=father["bg"])
-        self.m_output_label = tk.Label(output_frame, text="OutputFormat",
+        self.m_output_label = tk.Label(output_frame, text=self.i18n.t("output_format"),
                                        # font=self.my_ft1,
                                        bg=father['bg'])
         self.m_output_label.pack(side=tk.LEFT)
@@ -135,20 +137,20 @@ class ImagesConverter(object):
 
         # 输出格式
         out_ratio_frame = tk.Frame(father, bg=father["bg"])
-        self.m_output_width = tk.Label(out_ratio_frame, text="分辨率（宽x高）",
+        self.m_output_width = tk.Label(out_ratio_frame, text=self.i18n.t("resolution"),
                                        # font=self.my_ft1,
                                        bg=father['bg'])
         self.m_output_width.pack(side=tk.LEFT)
         # 创建宽输入框
         self.m_width_val = tk.StringVar()
         self.m_width_entry = EntryWithPlaceholder(out_ratio_frame, width=6, highlightcolor="LightGrey",
-                                                  placeholder="宽", placeholder_color="grey",
+                                                  placeholder=self.i18n.t("width_placeholder"), placeholder_color="grey",
                                                   textvariable=self.m_width_val)
         self.m_width_entry.pack(side=tk.LEFT, padx=5)
         # 创建高输入框
         self.m_height_val = tk.StringVar()
         self.m_height_entry = EntryWithPlaceholder(out_ratio_frame, width=6, highlightcolor="LightGrey",
-                                                   placeholder="高", placeholder_color="grey",
+                                                   placeholder=self.i18n.t("height_placeholder"), placeholder_color="grey",
                                                    textvariable=self.m_height_val)
         self.m_height_entry.pack(side=tk.LEFT, padx=5)
         out_ratio_frame.pack(side=tk.LEFT, pady=5)
@@ -177,23 +179,23 @@ class ImagesConverter(object):
         # 创建路径输入框
         self.m_image_path_val = tk.StringVar()
         self.m_image_path_entry = EntryWithPlaceholder(image_path_frame, width=80, highlightcolor="LightGrey",
-                                                       placeholder="选择要转化的图片路径", placeholder_color="grey",
+                                                       placeholder=self.i18n.t("select_images"), placeholder_color="grey",
                                                        textvariable=self.m_image_path_val)
         self.m_image_path_entry.pack(side=tk.LEFT, padx=border_padx)
         # 原视频输入按钮
-        self.m_image_path_botton = tk.Button(image_path_frame, text="选择", fg='black',
+        self.m_image_path_botton = tk.Button(image_path_frame, text=self.i18n.t("select_button"), fg='black',
                                              command=self.choose_image_files, width=6, height=1)
 
         self.m_image_path_botton.pack(side=tk.LEFT, fill=tk.X, padx=5)
 
         # 转化按钮
-        self.m_trans_botton = tk.Button(image_path_frame, text="开始转化", fg='black',
+        self.m_trans_botton = tk.Button(image_path_frame, text=self.i18n.t("start_convert"), fg='black',
                                         command=self.trans_images, width=8, height=1)
 
         self.m_trans_botton.pack(side=tk.LEFT, fill=tk.X, padx=5)
 
         # 提示文字
-        self.m_tip_label = tk.Label(image_path_frame, text="点击转化",
+        self.m_tip_label = tk.Label(image_path_frame, text=self.i18n.t("click_to_convert"),
                                     fg="green",
                                     bg=father['bg'])
         self.m_tip_label.pack(side=tk.LEFT, padx=border_padx)
@@ -217,9 +219,9 @@ class ImagesConverter(object):
         # defaultextension 为选取保存类型中的拓展名为文件名
         # filetypes为文件拓展名
         filepath = tk.filedialog.askopenfilenames(
-            title='选择若干个图片',
+            title=self.i18n.t("select_images_title"),
             defaultextension=".espace",
-            filetypes=[('Image', '.jpg .JPG .png .PNG'), ('所有文件', '.* .*')])
+            filetypes=[(self.i18n.t("image_files"), '.jpg .JPG .png .PNG'), (self.i18n.t("all_files"), '.* .*')])
         if filepath == None or filepath == "":
             return None
         else:
@@ -232,7 +234,7 @@ class ImagesConverter(object):
         """
         转化图片
         """
-        self.m_tip_label.configure(text="正在转化")
+        self.m_tip_label.configure(text=self.i18n.t("converting"))
         self.__father.update()
         images_path = self.m_image_path_val.get().strip()
         if images_path == None:
@@ -292,8 +294,8 @@ class ImagesConverter(object):
                     print(input_path)
                     out_obj = Converter(input_path, True, output_format)
                     out_obj.get_bin_file(outpath=ROOT_PATH)
-            self.m_tip_label.configure(text="转化完成")
-            print("转化完成")
+            self.m_tip_label.configure(text=self.i18n.t("convert_complete"))
+            print(self.i18n.t("convert_complete"))
 
     def init_info(self, father):
         """
@@ -304,19 +306,7 @@ class ImagesConverter(object):
         info_width = father.winfo_width()
         info_height = father.winfo_height() / 2
 
-        info = '''
-        本功能为LVGL图片转化工具  输入任意分辨率图片，转成你所指定的分辨率的图片。
-        可以同时选择多张图片，进行批量转换。转化完毕的照片存在本软件同级目录的OutFile文件夹下。
-        注：OutFile/Cache为缓存目录，可自行删除。
-
-        若转为存在内存卡中的jpg照片请勾选："JPG格式输出"
-
-        若转为存在内存卡中的bin照片请去掉"JPG格式输出"勾选，后选择：
-            ColorFormat：CF_TRUE_COLOR_ALPHA    OutputFormat：Binary_565
-
-        若转为存在Flash固件中的数组代码请去掉"JPG格式输出"勾选，后选择：
-            ColorFormat：CF_INDEXED_4_BIT    OutputFormat：C_array
-        '''
+        info = self.i18n.t("image_converter_info")
 
         self.m_project_info = tk.Text(father, height=30, width=140)
         self.m_project_info.tag_configure('bold_italics',
