@@ -11,13 +11,11 @@ LV_FONT_DECLARE(tomato_chFont_20);
 
 #define PIC_FILENAME_MAX_LEN 100
 
-static lv_style_t *tomato_scr = NULL;
+static lv_obj_t *tomato_scr = NULL;
 static lv_obj_t *clockLabel_1 = NULL, *clockLabel_2 = NULL;
 static lv_style_t default_style;
-static lv_style_t name_style;
-static lv_style_t time_style;
 static lv_style_t chFont_style;
-static lv_obj_t *chart, *txtLabel;
+static lv_obj_t *txtLabel;
 static lv_style_t numberSmall_style;
 static lv_style_t numberBig_style;
 static lv_style_t btn_style;
