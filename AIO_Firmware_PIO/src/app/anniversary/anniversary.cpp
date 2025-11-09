@@ -6,7 +6,7 @@
 
 #define ANNIVERSARY_APP_NAME "Anniversary"
 #define MAX_ANNIVERSARY_CNT 2
-#define TIME_API "http://api.m.taobao.com/rest/api3.do?api=mtop.common.gettimestamp"
+#define TIME_API "https://acs.m.taobao.com/gw/mtop.common.getTimestamp/"
 
 bool tmfromString(const char *date_str, struct tm *date);
 
@@ -214,9 +214,10 @@ static long long get_timestamp(String url)
         {
             String payload = http.getString();
             Serial.println(payload);
-            int time_index = (payload.indexOf("data")) + 12;
-            time = payload.substring(time_index, payload.length() - 3);
-            // 以网络时间戳为准
+            int time_index = payload.indexOf("\"t\":\"") + 5;       // Find "t":" and skip it (+5)
+            int time_end_index = payload.indexOf("\"", time_index); // Find closing quote
+            time = payload.substring(time_index, time_end_index);   // Extract timestamp
+            // Use network timestamp as reference
             run_data->preNetTimestamp = atoll(time.c_str()) + run_data->errorNetTimestamp + TIMEZERO_OFFSIZE;
             run_data->preLocalTimestamp = GET_SYS_MILLIS();
         }
