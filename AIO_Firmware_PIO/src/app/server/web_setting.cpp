@@ -113,10 +113,15 @@ String file_size(int bytes)
                          "<label class=\"input\"><span>数据更新周期（毫秒）</span><input type=\"text\"name=\"updataInterval\"value=\"%s\"></label>" \
                          "</label><input class=\"btn\" type=\"submit\" name=\"submit\" value=\"保存\"></form>"
 
-#define STOCK_SETTING "<form method=\"GET\" action=\"saveStockConf\">"                                                                                          \
-                      "<label class=\"input\"><span>股票代码,例如：sz000001或sh601126</span><input type=\"text\"name=\"stock_id\"value=\"%s\"></label>" \
-                      "<label class=\"input\"><span>数据更新周期（毫秒）</span><input type=\"text\"name=\"updataInterval\"value=\"%s\"></label>"      \
-                      "</label><input class=\"btn\" type=\"submit\" name=\"submit\" value=\"保存\"></form>"
+#define STOCK_SETTING "<form method=\"GET\" action=\"saveStockConf\">"                                                                                                                                                          \
+                      "<label class=\"input\"><span>Stock Symbol (e.g., AAPL, TSLA, 601126)</span><input type=\"text\"name=\"stock_symbol\"value=\"%s\"></label>"                                                                             \
+                      "<label class=\"input\"><span>Market Type</span><select name=\"market_type\" style=\"height:40px;width:240px;border:2px solid #00d9ff;background:rgba(0,217,255,0.05);color:#00d9ff;padding:0 12px;font-size:14px;\">" \
+                      "<option value=\"US\" %s>US (United States)</option>"                                                                                                                                                                    \
+                      "<option value=\"CN\" %s>CN (China)</option>"                                                                                                                                                                            \
+                      "<option value=\"HK\" %s>HK (Hong Kong)</option>"                                                                                                                                                                        \
+                      "</select></label>"                                                                                                                                                                                                       \
+                      "<label class=\"input\"><span>Update Interval (milliseconds)</span><input type=\"text\"name=\"updataInterval\"value=\"%s\"></label>"                                                                                     \
+                      "</label><input class=\"btn\" type=\"submit\" name=\"submit\" value=\"Save\"></form>"
 
 #define PICTURE_SETTING "<form method=\"GET\" action=\"savePictureConf\">"                                                                                         \
                         "<label class=\"input\"><span>自动切换时间间隔（毫秒）</span><input type=\"text\"name=\"switchInterval\"value=\"%s\"></label>" \
@@ -684,16 +689,25 @@ void bili_setting()
 void stock_setting()
 {
     char buf[2048];
-    char bili_uid[32];
+    char stock_symbol[32];
+    char market_type[32];
     char updataInterval[32];
-    // 读取数据
+    // Read configuration data
     app_controller->send_to(SERVER_APP_NAME, "Stock", APP_MESSAGE_READ_CFG,
                             NULL, NULL);
     app_controller->send_to(SERVER_APP_NAME, "Stock", APP_MESSAGE_GET_PARAM,
-                            (void *)"stock_id", bili_uid);
+                            (void *)"stock_symbol", stock_symbol);
+    app_controller->send_to(SERVER_APP_NAME, "Stock", APP_MESSAGE_GET_PARAM,
+                            (void *)"market_type", market_type);
     app_controller->send_to(SERVER_APP_NAME, "Stock", APP_MESSAGE_GET_PARAM,
                             (void *)"updataInterval", updataInterval);
-    sprintf(buf, STOCK_SETTING, bili_uid, updataInterval);
+    
+    // Prepare selected options for dropdown
+    const char* us_selected = (strcmp(market_type, "US") == 0) ? "selected" : "";
+    const char* cn_selected = (strcmp(market_type, "CN") == 0) ? "selected" : "";
+    const char* hk_selected = (strcmp(market_type, "HK") == 0) ? "selected" : "";
+    
+    sprintf(buf, STOCK_SETTING, stock_symbol, us_selected, cn_selected, hk_selected, updataInterval);
     webpage = buf;
     Send_HTML(webpage);
 }
@@ -956,16 +970,20 @@ void saveBiliConf(void)
 
 void saveStockConf(void)
 {
-    Send_HTML(F("<h1>设置成功! 退出APP或者继续其他设置.</h1>"));
+    Send_HTML(F("<h1>Configuration saved successfully! Exit APP or continue other settings.</h1>"));
     app_controller->send_to(SERVER_APP_NAME, "Stock",
                             APP_MESSAGE_SET_PARAM,
-                            (void *)"stock_id",
-                            (void *)server.arg("stock_id").c_str());
+                            (void *)"stock_symbol",
+                            (void *)server.arg("stock_symbol").c_str());
+    app_controller->send_to(SERVER_APP_NAME, "Stock",
+                            APP_MESSAGE_SET_PARAM,
+                            (void *)"market_type",
+                            (void *)server.arg("market_type").c_str());
     app_controller->send_to(SERVER_APP_NAME, "Stock",
                             APP_MESSAGE_SET_PARAM,
                             (void *)"updataInterval",
                             (void *)server.arg("updataInterval").c_str());
-    // 持久化数据
+    // Persist data to flash
     app_controller->send_to(SERVER_APP_NAME, "Stock", APP_MESSAGE_WRITE_CFG,
                             NULL, NULL);
 }

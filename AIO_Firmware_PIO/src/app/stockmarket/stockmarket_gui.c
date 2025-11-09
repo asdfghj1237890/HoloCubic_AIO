@@ -95,7 +95,7 @@ void display_stockmarket_init(void)
     NameLabel = lv_label_create(stockmarket_gui);
     lv_obj_add_style(NameLabel, &chFont_style, LV_STATE_DEFAULT);
 
-    //分隔符
+    // Separator lines
     uplineLabel = lv_label_create(stockmarket_gui);
     lv_obj_add_style(uplineLabel, &splitline_style, LV_STATE_DEFAULT);
     lv_label_set_recolor(uplineLabel, true);
@@ -122,7 +122,7 @@ void display_stockmarket_init(void)
     lv_obj_add_style(CloseQuo, &chFont_style, LV_STATE_DEFAULT);
     lv_label_set_recolor(CloseQuo, true);
 
-    //绘制图形
+    // Draw layout
     lv_obj_align(NameLabel, LV_ALIGN_TOP_LEFT, 0, 0);
     lv_obj_align(uplineLabel, LV_ALIGN_LEFT_MID, 0, -90);
     lv_obj_align_to(nowQuoLabel, uplineLabel, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0);
@@ -140,54 +140,54 @@ void display_stockmarket_init(void)
 }
 
 /*
- * 其他函数请根据需要添加
+ * Add other functions as needed
  */
 
 void display_stockmarket(struct StockMarket stockInfo, lv_scr_load_anim_t anim_type)
 {
     display_stockmarket_init();
 
-    //股票名称 NameLabel
-    lv_label_set_text_fmt(NameLabel, "股票代码: %s", stockInfo.code);
+    // Stock name/symbol
+    lv_label_set_text_fmt(NameLabel, "Stock: %s", stockInfo.name);
 
-    if (stockInfo.updownflag == 0) //股价下跌
+    if (stockInfo.updownflag == 0) // Stock price down (Taiwan style: RED for down)
     {
-        //当前价
-        lv_obj_add_style(nowQuoLabel, &numberBigGreen_style, LV_STATE_DEFAULT);
-        lv_label_set_text_fmt(nowQuoLabel, "%.2f", stockInfo.NowQuo);
-        //箭头
-        lv_img_set_src(ArrowImg, &down);
-        //涨跌幅
-        lv_obj_add_style(ChgValueLabel, &numberLittleGreen_style, LV_STATE_DEFAULT);
-        lv_label_set_text_fmt(ChgValueLabel, "%.2f", stockInfo.ChgValue);
-        lv_obj_add_style(ChgPercentLabel, &numberLittleGreen_style, LV_STATE_DEFAULT);
-        lv_label_set_text_fmt(ChgPercentLabel, "%.2f%%", stockInfo.ChgPercent);
-    }
-    else //股价上涨
-    {
-        //当前价
+        // Current price - RED for down
         lv_obj_add_style(nowQuoLabel, &numberBigRed_style, LV_STATE_DEFAULT);
         lv_label_set_text_fmt(nowQuoLabel, "%.2f", stockInfo.NowQuo);
-        //箭头
-        lv_img_set_src(ArrowImg, &up);
-        //涨跌幅
+        // Arrow
+        lv_img_set_src(ArrowImg, &down);
+        // Change value and percentage - RED for down
         lv_obj_add_style(ChgValueLabel, &numberLittleRed_style, LV_STATE_DEFAULT);
         lv_label_set_text_fmt(ChgValueLabel, "%.2f", stockInfo.ChgValue);
         lv_obj_add_style(ChgPercentLabel, &numberLittleRed_style, LV_STATE_DEFAULT);
         lv_label_set_text_fmt(ChgPercentLabel, "%.2f%%", stockInfo.ChgPercent);
     }
+    else // Stock price up (Taiwan style: GREEN for up)
+    {
+        // Current price - GREEN for up
+        lv_obj_add_style(nowQuoLabel, &numberBigGreen_style, LV_STATE_DEFAULT);
+        lv_label_set_text_fmt(nowQuoLabel, "%.2f", stockInfo.NowQuo);
+        // Arrow
+        lv_img_set_src(ArrowImg, &up);
+        // Change value and percentage - GREEN for up
+        lv_obj_add_style(ChgValueLabel, &numberLittleGreen_style, LV_STATE_DEFAULT);
+        lv_label_set_text_fmt(ChgValueLabel, "%.2f", stockInfo.ChgValue);
+        lv_obj_add_style(ChgPercentLabel, &numberLittleGreen_style, LV_STATE_DEFAULT);
+        lv_label_set_text_fmt(ChgPercentLabel, "%.2f%%", stockInfo.ChgPercent);
+    }
 
-    //今开    最高
-    lv_label_set_text_fmt(OpenQuo, "今   开:#ffa500 %0.2f#   最高:#ffa500 %0.2f#",
+    // Open    High
+    lv_label_set_text_fmt(OpenQuo, "Open:#ffa500 %0.2f#   High:#ffa500 %0.2f#",
                           stockInfo.OpenQuo, stockInfo.MaxQuo);
-    //昨收    最低
-    lv_label_set_text_fmt(MaxQuo, "昨   收:#ffa500 %0.2f#   最低:#ffa500 %0.2f#",
+    // Previous Close    Low
+    lv_label_set_text_fmt(MaxQuo, "Prev:#ffa500 %0.2f#   Low:#ffa500 %0.2f#",
                           stockInfo.CloseQuo, stockInfo.MinQuo);
-    //成交量
-    lv_label_set_text_fmt(MinQuo, "成交量:#ffa500 %0.2f#万手",
+    // Trading Volume
+    lv_label_set_text_fmt(MinQuo, "Volume:#ffa500 %0.2fM#",
                           stockInfo.tradvolume / 1000000);
-    //成交额
-    lv_label_set_text_fmt(CloseQuo, "成交额:#ffa500 %0.2f#亿元",
+    // Turnover
+    lv_label_set_text_fmt(CloseQuo, "Turnover:#ffa500 %0.2fB#",
                           stockInfo.turnover / 100000000);
 }
 

@@ -2,21 +2,24 @@
 #include "stockmarket_gui.h"
 #include "sys/app_controller.h"
 #include "../../common.h"
+#include "ArduinoJson.h"
 
-// STOCKmarket的持久化配置
+// STOCKmarket configuration for persistence
 #define B_CONFIG_PATH "/stockmarket.cfg"
 struct B_Config
 {
-    String stock_id;              // bilibili的uid
-    unsigned long updataInterval; // 更新的时间间隔(s)
+    String stock_symbol;          // Stock symbol (e.g., AAPL, TSLA, 601126)
+    String market_type;           // Market type: CN (China), US (USA), HK (Hong Kong), etc.
+    unsigned long updataInterval; // Update interval (milliseconds)
 };
 
 static void write_config(const B_Config *cfg)
 {
     char tmp[16];
-    // 将配置数据保存在文件中（持久化）
+    // Save configuration data to file (persistence)
     String w_data;
-    w_data = w_data + cfg->stock_id + "\n";
+    w_data = w_data + cfg->stock_symbol + "\n";
+    w_data = w_data + cfg->market_type + "\n";
     memset(tmp, 0, 16);
     snprintf(tmp, 16, "%lu\n", cfg->updataInterval);
     w_data += tmp;
@@ -25,27 +28,28 @@ static void write_config(const B_Config *cfg)
 
 static void read_config(B_Config *cfg)
 {
-    // 如果有需要持久化配置文件 可以调用此函数将数据存在flash中
-    // 配置文件名最好以APP名为开头 以".cfg"结尾，以免多个APP读取混乱
+    // Read persistent configuration from flash
+    // Config filename should start with APP name and end with ".cfg" to avoid conflicts
     char info[128] = {0};
     uint16_t size = g_flashCfg.readFile(B_CONFIG_PATH, (uint8_t *)info);
     info[size] = 0;
     if (size == 0)
     {
-        // 默认值
-        cfg->stock_id = "sh601126";  // 股票代码
-        cfg->updataInterval = 10000; // 更新的时间间隔10000(10s)
+        // Default values
+        cfg->stock_symbol = "AAPL";    // Default: Apple Inc.
+        cfg->market_type = "US";       // Default: US market
+        cfg->updataInterval = 10000;   // Update interval: 10000ms (10s)
         write_config(cfg);
     }
     else
     {
-        // 解析数据
-        char *param[2] = {0};
-        analyseParam(info, 2, param);
-        cfg->stock_id = param[0];
-        cfg->updataInterval = atol(param[1]);
+        // Parse data
+        char *param[3] = {0};
+        analyseParam(info, 3, param);
+        cfg->stock_symbol = param[0];
+        cfg->market_type = param[1];
+        cfg->updataInterval = atol(param[2]);
     }
-    //    cfg->stock_id = "sh601126";  // 股票代码
 }
 
 struct StockmarketAppRunData
@@ -64,26 +68,81 @@ struct MyHttpResult
 static B_Config cfg_data;
 static StockmarketAppRunData *run_data = NULL;
 
-static MyHttpResult http_request(String uid = "sh601126")
+// Build stock symbol based on market type
+static String buildStockSymbol(String symbol, String market)
 {
-    String url = "http://hq.sinajs.cn/list=" + uid;
-    MyHttpResult result;
-
-    HTTPClient httpClient;
-    httpClient.setTimeout(1000);
-    bool status = httpClient.begin(url);
-    if (status == false)
+    if (market == "CN")
     {
-        result.httpCode = -1;
-        return result;
+        // Chinese stocks: need sh/sz prefix for Sina API
+        if (!symbol.startsWith("sh") && !symbol.startsWith("sz"))
+        {
+            // Default to Shanghai if no prefix
+            return "sh" + symbol;
+        }
+        return symbol;
     }
+    else if (market == "HK")
+    {
+        // Hong Kong stocks
+        return symbol + ".HK";
+    }
+    else if (market == "US")
+    {
+        // US stocks: use symbol as-is
+        return symbol;
+    }
+    return symbol;
+}
 
-    httpClient.addHeader("referer", "https://finance.sina.com.cn");
-    int httpCode = httpClient.GET();
-    String httpResponse = httpClient.getString();
-    httpClient.end();
-    result.httpCode = httpCode;
-    result.httpResponse = httpResponse;
+static MyHttpResult http_request(String symbol, String market)
+{
+    MyHttpResult result;
+    String url;
+    
+    // Use appropriate API based on market
+    if (market == "CN")
+    {
+        // Chinese market: use Sina Finance API
+        String stockSymbol = buildStockSymbol(symbol, market);
+        url = "http://hq.sinajs.cn/list=" + stockSymbol;
+        
+        HTTPClient httpClient;
+        httpClient.setTimeout(2000);
+        bool status = httpClient.begin(url);
+        if (status == false)
+        {
+            result.httpCode = -1;
+            return result;
+        }
+        httpClient.addHeader("referer", "https://finance.sina.com.cn");
+        int httpCode = httpClient.GET();
+        String httpResponse = httpClient.getString();
+        httpClient.end();
+        result.httpCode = httpCode;
+        result.httpResponse = httpResponse;
+    }
+    else
+    {
+        // International markets: use Yahoo Finance API
+        String stockSymbol = buildStockSymbol(symbol, market);
+        url = "https://query1.finance.yahoo.com/v8/finance/chart/" + stockSymbol + "?interval=1d&range=1d";
+        
+        HTTPClient httpClient;
+        httpClient.setTimeout(3000);
+        bool status = httpClient.begin(url);
+        if (status == false)
+        {
+            result.httpCode = -1;
+            return result;
+        }
+        httpClient.addHeader("User-Agent", "Mozilla/5.0");
+        int httpCode = httpClient.GET();
+        String httpResponse = httpClient.getString();
+        httpClient.end();
+        result.httpCode = httpCode;
+        result.httpResponse = httpResponse;
+    }
+    
     return result;
 }
 
@@ -155,67 +214,194 @@ static int stockmarket_exit_callback(void *param)
     return 0;
 }
 
+// Parse Chinese market data from Sina Finance API
+static bool parse_sina_data(String payload)
+{
+    Serial.println("[HTTP] Parsing Sina Finance data");
+    int startIndex_1 = payload.indexOf(',') + 1;
+    int endIndex_1 = payload.indexOf(',', startIndex_1);
+    int startIndex_2 = payload.indexOf(',', endIndex_1) + 1;
+    int endIndex_2 = payload.indexOf(',', startIndex_2);
+    int startIndex_3 = payload.indexOf(',', endIndex_2) + 1;
+    int endIndex_3 = payload.indexOf(',', startIndex_3);
+    int startIndex_4 = payload.indexOf(',', endIndex_3) + 1;
+    int endIndex_4 = payload.indexOf(',', startIndex_4);
+    int startIndex_5 = payload.indexOf(',', endIndex_4) + 1;
+    int endIndex_5 = payload.indexOf(',', startIndex_5);
+    
+    String Stockname = payload.substring(payload.indexOf('"') + 1, payload.indexOf(','));
+    memset(run_data->stockdata.name, '\0', 13);
+    int nameLen = min(12, (int)Stockname.length());
+    for (int i = 0; i < nameLen; i++)
+        run_data->stockdata.name[i] = Stockname.charAt(i);
+    
+    run_data->stockdata.OpenQuo = payload.substring(startIndex_1, endIndex_1).toFloat();
+    run_data->stockdata.CloseQuo = payload.substring(startIndex_2, endIndex_2).toFloat();
+    run_data->stockdata.NowQuo = payload.substring(startIndex_3, endIndex_3).toFloat();
+    run_data->stockdata.MaxQuo = payload.substring(startIndex_4, endIndex_4).toFloat();
+    run_data->stockdata.MinQuo = payload.substring(startIndex_5, endIndex_5).toFloat();
+
+    int startIndex_8 = payload.indexOf(',', endIndex_5) + 1;
+    for (int i = 0; i < 3; i++)
+        startIndex_8 = payload.indexOf(',', startIndex_8) + 1;
+    int endIndex_8 = payload.indexOf(',', startIndex_8);
+    int startIndex_9 = payload.indexOf(',', endIndex_8) + 1;
+    int endIndex_9 = payload.indexOf(',', startIndex_9);
+    run_data->stockdata.tradvolume = payload.substring(startIndex_8, endIndex_8).toFloat();
+    run_data->stockdata.turnover = payload.substring(startIndex_9, endIndex_9).toFloat();
+    
+    return true;
+}
+
+// Parse international market data from Yahoo Finance API
+static bool parse_yahoo_data(String payload)
+{
+    Serial.println("[HTTP] Parsing Yahoo Finance data");
+    DynamicJsonDocument doc(4096);
+    DeserializationError error = deserializeJson(doc, payload);
+    
+    if (error)
+    {
+        Serial.print("[JSON] Parse failed: ");
+        Serial.println(error.c_str());
+        return false;
+    }
+    
+    JsonObject chart = doc["chart"]["result"][0];
+    if (chart.isNull())
+    {
+        Serial.println("[JSON] Invalid data structure");
+        return false;
+    }
+    
+    // Get stock name/symbol
+    const char* symbol = chart["meta"]["symbol"];
+    if (symbol)
+    {
+        memset(run_data->stockdata.name, '\0', 13);
+        strncpy(run_data->stockdata.name, symbol, 12);
+    }
+    
+    // Get current price
+    float currentPrice = chart["meta"]["regularMarketPrice"];
+    float previousClose = chart["meta"]["previousClose"];
+    
+    // Get OHLC data from quotes
+    JsonArray high = chart["indicators"]["quote"][0]["high"];
+    JsonArray low = chart["indicators"]["quote"][0]["low"];
+    JsonArray open = chart["indicators"]["quote"][0]["open"];
+    JsonArray volume = chart["indicators"]["quote"][0]["volume"];
+    
+    run_data->stockdata.NowQuo = currentPrice;
+    run_data->stockdata.CloseQuo = previousClose;
+    
+    // Get today's open, high, low (last valid value)
+    if (open.size() > 0)
+    {
+        for (int i = open.size() - 1; i >= 0; i--)
+        {
+            if (!open[i].isNull())
+            {
+                run_data->stockdata.OpenQuo = open[i];
+                break;
+            }
+        }
+    }
+    
+    if (high.size() > 0)
+    {
+        for (int i = high.size() - 1; i >= 0; i--)
+        {
+            if (!high[i].isNull())
+            {
+                run_data->stockdata.MaxQuo = high[i];
+                break;
+            }
+        }
+    }
+    
+    if (low.size() > 0)
+    {
+        for (int i = low.size() - 1; i >= 0; i--)
+        {
+            if (!low[i].isNull())
+            {
+                run_data->stockdata.MinQuo = low[i];
+                break;
+            }
+        }
+    }
+    
+    if (volume.size() > 0)
+    {
+        for (int i = volume.size() - 1; i >= 0; i--)
+        {
+            if (!volume[i].isNull())
+            {
+                run_data->stockdata.tradvolume = volume[i];
+                break;
+            }
+        }
+    }
+    
+    run_data->stockdata.turnover = 0; // Yahoo doesn't provide turnover directly
+    
+    return true;
+}
+
 static void update_stock_data()
 {
-    MyHttpResult result = http_request(cfg_data.stock_id);
+    MyHttpResult result = http_request(cfg_data.stock_symbol, cfg_data.market_type);
     if (-1 == result.httpCode)
     {
         Serial.println("[HTTP] Http request failed.");
         return;
     }
+    
     if (result.httpCode > 0)
     {
         if (result.httpCode == HTTP_CODE_OK || result.httpCode == HTTP_CODE_MOVED_PERMANENTLY)
         {
             String payload = result.httpResponse;
             Serial.println("[HTTP] OK");
-            Serial.println(payload);
-            int startIndex_1 = payload.indexOf(',') + 1;
-            int endIndex_1 = payload.indexOf(',', startIndex_1);
-            int startIndex_2 = payload.indexOf(',', endIndex_1) + 1;
-            int endIndex_2 = payload.indexOf(',', startIndex_2);
-            int startIndex_3 = payload.indexOf(',', endIndex_2) + 1;
-            int endIndex_3 = payload.indexOf(',', startIndex_3);
-            int startIndex_4 = payload.indexOf(',', endIndex_3) + 1;
-            int endIndex_4 = payload.indexOf(',', startIndex_4);
-            int startIndex_5 = payload.indexOf(',', endIndex_4) + 1;
-            int endIndex_5 = payload.indexOf(',', startIndex_5);
-            String Stockname = payload.substring(payload.indexOf('"') + 1, payload.indexOf(',')); // 股票名称
-            memset(run_data->stockdata.name, '\0', 9);
-            for (int i = 0; i < 8; i++)
-                run_data->stockdata.name[i] = Stockname.charAt(i);
-            run_data->stockdata.name[8] = '\0';
-            run_data->stockdata.OpenQuo = payload.substring(startIndex_1, endIndex_1).toFloat();  // 今日开盘价
-            run_data->stockdata.CloseQuo = payload.substring(startIndex_2, endIndex_2).toFloat(); // 昨日收盘价
-            run_data->stockdata.NowQuo = payload.substring(startIndex_3, endIndex_3).toFloat();   // 当前价
-            run_data->stockdata.MaxQuo = payload.substring(startIndex_4, endIndex_4).toFloat();   // 今日最高价
-            run_data->stockdata.MinQuo = payload.substring(startIndex_5, endIndex_5).toFloat();   // 今日最低价
-
-            run_data->stockdata.ChgValue = run_data->stockdata.NowQuo - run_data->stockdata.CloseQuo;
-            run_data->stockdata.ChgPercent = run_data->stockdata.ChgValue / run_data->stockdata.CloseQuo * 100;
-            for (int i = 0; i < 8; i++)
-                run_data->stockdata.code[i] = cfg_data.stock_id.charAt(i);
-
-            if (run_data->stockdata.ChgValue >= 0)
+            
+            bool parseSuccess = false;
+            
+            // Parse based on market type
+            if (cfg_data.market_type == "CN")
             {
-                run_data->stockdata.updownflag = 1;
+                parseSuccess = parse_sina_data(payload);
             }
             else
             {
-                run_data->stockdata.updownflag = 0;
+                parseSuccess = parse_yahoo_data(payload);
             }
-            int startIndex_6 = payload.indexOf(',', endIndex_5) + 1;
-            int endIndex_6 = payload.indexOf(',', startIndex_6);
-            int startIndex_7 = payload.indexOf(',', endIndex_6) + 1;
-            int endIndex_7 = payload.indexOf(',', startIndex_7);
-            int startIndex_8 = payload.indexOf(',', endIndex_7) + 1;
-            int endIndex_8 = payload.indexOf(',', startIndex_8);
-            int startIndex_9 = payload.indexOf(',', endIndex_8) + 1;
-            int endIndex_9 = payload.indexOf(',', startIndex_9);
-            run_data->stockdata.tradvolume = payload.substring(startIndex_8, endIndex_8).toFloat(); // 成交量
-            run_data->stockdata.turnover = payload.substring(startIndex_9, endIndex_9).toFloat();   // 成交额
-            // Serial.printf("chg= %.2f\r\n",run_data->stockdata.ChgValue);
-            // Serial.printf("chgpercent= %.2f%%\r\n",run_data->stockdata.ChgPercent);
+            
+            if (!parseSuccess)
+            {
+                Serial.println("[Parse] Failed to parse stock data");
+                return;
+            }
+            
+            // Calculate change values
+            run_data->stockdata.ChgValue = run_data->stockdata.NowQuo - run_data->stockdata.CloseQuo;
+            run_data->stockdata.ChgPercent = (run_data->stockdata.CloseQuo != 0) 
+                ? (run_data->stockdata.ChgValue / run_data->stockdata.CloseQuo * 100) 
+                : 0;
+            
+            // Set stock code
+            memset(run_data->stockdata.code, '\0', 9);
+            int codeLen = min(8, (int)cfg_data.stock_symbol.length());
+            for (int i = 0; i < codeLen; i++)
+                run_data->stockdata.code[i] = cfg_data.stock_symbol.charAt(i);
+            
+            // Set up/down flag
+            run_data->stockdata.updownflag = (run_data->stockdata.ChgValue >= 0) ? 1 : 0;
+            
+            Serial.printf("[Stock] %s: %.2f (%.2f%%)\n", 
+                run_data->stockdata.code, 
+                run_data->stockdata.NowQuo, 
+                run_data->stockdata.ChgPercent);
         }
     }
     else
@@ -245,13 +431,22 @@ static void stockmarket_message_handle(const char *from, const char *to,
     case APP_MESSAGE_GET_PARAM:
     {
         char *param_key = (char *)message;
-        if (!strcmp(param_key, "stock_id"))
+        if (!strcmp(param_key, "stock_symbol"))
         {
-            snprintf((char *)ext_info, 32, "%s", cfg_data.stock_id.c_str());
+            snprintf((char *)ext_info, 32, "%s", cfg_data.stock_symbol.c_str());
+        }
+        else if (!strcmp(param_key, "market_type"))
+        {
+            snprintf((char *)ext_info, 32, "%s", cfg_data.market_type.c_str());
         }
         else if (!strcmp(param_key, "updataInterval"))
         {
             snprintf((char *)ext_info, 32, "%u", cfg_data.updataInterval);
+        }
+        // Legacy support for old parameter name
+        else if (!strcmp(param_key, "stock_id"))
+        {
+            snprintf((char *)ext_info, 32, "%s", cfg_data.stock_symbol.c_str());
         }
         else
         {
@@ -263,13 +458,22 @@ static void stockmarket_message_handle(const char *from, const char *to,
     {
         char *param_key = (char *)message;
         char *param_val = (char *)ext_info;
-        if (!strcmp(param_key, "stock_id"))
+        if (!strcmp(param_key, "stock_symbol"))
         {
-            cfg_data.stock_id = param_val;
+            cfg_data.stock_symbol = param_val;
+        }
+        else if (!strcmp(param_key, "market_type"))
+        {
+            cfg_data.market_type = param_val;
         }
         else if (!strcmp(param_key, "updataInterval"))
         {
             cfg_data.updataInterval = atol(param_val);
+        }
+        // Legacy support for old parameter name
+        else if (!strcmp(param_key, "stock_id"))
+        {
+            cfg_data.stock_symbol = param_val;
         }
     }
     break;
