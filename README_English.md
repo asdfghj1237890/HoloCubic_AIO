@@ -76,6 +76,8 @@ Since the small TV uses MPU6050 gyroscope accelerometer, it is necessary to keep
 ### Introduction to APP
 
 ##### Web Configuration Service (Web Server)
+![WebPage](Image/holocubic_web.png)
+
 1. Operating conditions: None. Note: WiFi and other information is stored in flash, memory card does not affect the connection of WiFi function.
 2. When enabled, ` Web Sever Start 'is displayed. The small TV turns on AP mode, which is built on ` AP_IP ` (marked on the service interface of the screen). The hot spot of AP mode is called ` HoloCubic_AIO ` without password.
 3. Start using the computer in the same network environment (same network segment) as' HoloCubic '. If you haven't connected to WiFi before, you need to use your computer to connect to WiFi without password, which is a hot spot named ` HoloCubic_AIO ` released by HoloCubic.

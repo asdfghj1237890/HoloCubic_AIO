@@ -83,6 +83,8 @@ B站功能操作演示视频链接 https://www.bilibili.com/video/BV1wS4y1R7YF/
 ### APP介绍
 
 ##### 网页配置服务（Web Server）
+![WebPage](Image/holocubic_web.png)
+
 1. 运行条件：无。注：wifi等信息是保存在flash中，内存卡完全不影响wifi功能的连接。
 2. 启用后，会显示`Web Sever Start`。小电视开启AP模式，建立在`AP_IP`上（屏幕的服务界面有标注），AP模式的热点名为`HoloCubic_AIO`无密码。
 3. 开始使用时，应让电脑与`HoloCubic`处于同一网络环境（同网段）。如果之前没连接过wifi则需要使用电脑连接HoloCubic放出的热点名为`HoloCubic_AIO`无密码的wifi。
