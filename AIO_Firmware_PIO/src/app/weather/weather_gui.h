@@ -3,6 +3,12 @@
 
 #define FORECAST_DAYS 4 // 天气预报的总天数
 
+// Language enum for switching between Simplified and Traditional Chinese
+typedef enum {
+    LANG_SIMPLIFIED_CHINESE = 0,
+    LANG_TRADITIONAL_CHINESE = 1
+} WeatherLanguage;
+
 struct Weather
 {
 
@@ -56,6 +62,9 @@ extern "C"
     void display_space(void);
     // int airQulityLevel(int q);
     int airQulityLevel(char *q);
+    void weather_set_language(WeatherLanguage lang);
+    WeatherLanguage weather_get_language(void);
+    void weather_toggle_language(void);
 
 #ifdef __cplusplus
 } /* extern "C" */

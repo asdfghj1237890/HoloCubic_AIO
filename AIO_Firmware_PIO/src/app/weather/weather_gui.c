@@ -6,7 +6,7 @@
 LV_FONT_DECLARE(lv_font_ibmplex_115);
 LV_FONT_DECLARE(lv_font_ibmplex_64);
 LV_FONT_DECLARE(ch_font20);
-LV_FONT_DECLARE(ch_font20_tc);  // Traditional Chinese font
+LV_FONT_DECLARE(ch_font20_tc);
 static lv_style_t default_style;
 static lv_style_t chFont_style;
 static lv_style_t numberSmall_style;
@@ -35,8 +35,42 @@ const void *weaImage_map[] = {&weather_0, &weather_9, &weather_14, &weather_5, &
                               &weather_30, &weather_26, &weather_11, &weather_23};
 // 太空人图标路径的映射关系
 const void *manImage_map[] = {&man_0, &man_1, &man_2, &man_3, &man_4, &man_5, &man_6, &man_7, &man_8, &man_9};
-static const char weekDayCh[7][4] = {"日", "一", "二", "三", "四", "五", "六"};
-static const char airQualityCh[6][10] = {"优", "良", "轻度", "中度", "重度", "严重"};
+
+// Current language setting (default: Simplified Chinese)
+static WeatherLanguage current_language = LANG_SIMPLIFIED_CHINESE;
+
+// Dual language support: Simplified Chinese [0] and Traditional Chinese [1]
+static const char weekDayCh[2][7][4] = {
+    {"日", "一", "二", "三", "四", "五", "六"},  // Simplified Chinese
+    {"日", "一", "二", "三", "四", "五", "六"}   // Traditional Chinese (same)
+};
+
+static const char airQualityCh[2][6][10] = {
+    {"优", "良", "轻度", "中度", "重度", "严重"},      // Simplified Chinese
+    {"優", "良", "輕度", "中度", "重度", "嚴重"}       // Traditional Chinese
+};
+
+// UI text strings for different languages
+typedef struct {
+    const char *view_more_weather;
+    const char *wind_power;
+    const char *today_weather_format;
+} UIStrings;
+
+static const UIStrings ui_strings[2] = {
+    // Simplified Chinese
+    {
+        .view_more_weather = "查看更多天气",
+        .wind_power = "风力",
+        .today_weather_format = "   今日天气:%s, %s风%s级.              "
+    },
+    // Traditional Chinese
+    {
+        .view_more_weather = "查看更多天氣",
+        .wind_power = "風力",
+        .today_weather_format = "   今日天氣:%s, %s風%s級.              "
+    }
+};
 
 void weather_gui_init(void)
 {
@@ -46,7 +80,7 @@ void weather_gui_init(void)
     lv_style_init(&chFont_style);
     lv_style_set_text_opa(&chFont_style, LV_OPA_COVER);
     lv_style_set_text_color(&chFont_style, lv_color_hex(0xffffff));
-    lv_style_set_text_font(&chFont_style, &ch_font20_tc);  // Traditional Chinese (994 chars)
+    lv_style_set_text_font(&chFont_style, &ch_font20);
 
     lv_style_init(&numberSmall_style);
     lv_style_set_text_opa(&numberSmall_style, LV_OPA_COVER);
@@ -85,7 +119,7 @@ void display_curve_init(lv_scr_load_anim_t anim_type)
     titleLabel = lv_label_create(scr_2);
     lv_obj_add_style(titleLabel, &chFont_style, LV_STATE_DEFAULT);
     lv_label_set_recolor(titleLabel, true);
-    lv_label_set_text(titleLabel, "查看更多天气");
+    lv_label_set_text(titleLabel, ui_strings[current_language].view_more_weather);
 
     chart = lv_chart_create(scr_2);
     lv_obj_set_size(chart, 220, 180);
@@ -161,17 +195,18 @@ void display_weather_init(lv_scr_load_anim_t anim_type)
     airQualityLabel = lv_label_create(airQualityBtn);
     lv_obj_add_style(airQualityLabel, &chFont_style, LV_STATE_DEFAULT);
     lv_obj_align(airQualityLabel, LV_ALIGN_CENTER, 0, 0);
-    lv_label_set_text(airQualityLabel, airQualityCh[0]);
+    lv_label_set_text(airQualityLabel, airQualityCh[current_language][0]);
 
     txtLabel = lv_label_create(scr_1);
     lv_obj_add_style(txtLabel, &chFont_style, LV_STATE_DEFAULT);
     // lvgl8之前版本，模式一旦设置 LV_LABEL_LONG_SCROLL_CIRCULAR
     // 宽度恒定等于当前文本的长度，所以下面先设置以下长度
-    lv_label_set_text(txtLabel, "最低气温12°C, ");
+    lv_label_set_text(txtLabel, current_language == LANG_SIMPLIFIED_CHINESE ? "最低气温12°C, " : "最低氣溫12°C, ");
     lv_obj_set_size(txtLabel, 120, 30);
     lv_label_set_long_mode(txtLabel, LV_LABEL_LONG_SCROLL_CIRCULAR);
-    lv_label_set_text_fmt(txtLabel, "晴天, %s 0 级.   ", "风力");
-    // lv_label_set_text_fmt(txtLabel, "最低气温%d°C, 最高气温%d°C, %s%d 级.   ", 15, 20, "西北风", 0);
+    lv_label_set_text_fmt(txtLabel, current_language == LANG_SIMPLIFIED_CHINESE ? "晴天, %s 0 级.   " : "晴天, %s 0 級.   ", 
+                          ui_strings[current_language].wind_power);
+    // lv_label_set_text_fmt(txtLabel, "最低氣溫%d°C, 最高氣溫%d°C, %s%d 級.   ", 15, 20, "西北風", 0);
 
     clockLabel_1 = lv_label_create(scr_1);
     lv_obj_add_style(clockLabel_1, &numberBig_style, LV_STATE_DEFAULT);
@@ -185,7 +220,7 @@ void display_weather_init(lv_scr_load_anim_t anim_type)
 
     dateLabel = lv_label_create(scr_1);
     lv_obj_add_style(dateLabel, &chFont_style, LV_STATE_DEFAULT);
-    lv_label_set_text_fmt(dateLabel, "%2d月%2d日   周%s", 11, 23, weekDayCh[1]);
+    lv_label_set_text_fmt(dateLabel, "%2d月%2d日   周%s", 11, 23, weekDayCh[current_language][1]);
 
     tempImg = lv_img_create(scr_1);
     lv_img_set_src(tempImg, &temp);
@@ -258,12 +293,12 @@ void display_weather(struct Weather weaInfo, lv_scr_load_anim_t anim_type)
     {
         lv_obj_align(cityLabel, LV_ALIGN_TOP_LEFT, 20, 15);
     }
-    lv_label_set_text(airQualityLabel, airQualityCh[weaInfo.airQulity]);
+    lv_label_set_text(airQualityLabel, airQualityCh[current_language][weaInfo.airQulity]);
     lv_img_set_src(weatherImg, weaImage_map[weaInfo.weather_code]);
     // 下面这行代码可能会出错
-    // lv_label_set_text_fmt(txtLabel, "最低气温%d°C, 最高气温%d°C, %s%d 级.   ",
+    // lv_label_set_text_fmt(txtLabel, "最低氣溫%d°C, 最高氣溫%d°C, %s%d 級.   ",
     //                       weaInfo.minTemp, weaInfo.maxTemp, weaInfo.windDir, weaInfo.windLevel);
-    lv_label_set_text_fmt(txtLabel, "   今日天气:%s, %s风%s级.              ",
+    lv_label_set_text_fmt(txtLabel, ui_strings[current_language].today_weather_format,
                           weaInfo.weather, weaInfo.windDir, weaInfo.windpower);
 
     lv_bar_set_value(tempBar, weaInfo.temperature, LV_ANIM_ON);
@@ -299,7 +334,7 @@ void display_time(struct TimeStr timeInfo, lv_scr_load_anim_t anim_type)
     lv_label_set_text_fmt(clockLabel_1, "%02d#ffa500 %02d#", timeInfo.hour, timeInfo.minute);
     lv_label_set_text_fmt(clockLabel_2, "%02d", timeInfo.second);
     lv_label_set_text_fmt(dateLabel, "%2d月%2d日   周%s", timeInfo.month, timeInfo.day,
-                          weekDayCh[timeInfo.weekday]);
+                          weekDayCh[current_language][timeInfo.weekday]);
 
     // lv_obj_align(clockLabel_1, NULL, LV_ALIGN_LEFT_MID, 0, 10);
     // lv_obj_align(clockLabel_2, NULL, LV_ALIGN_LEFT_MID, 165, 9);
@@ -441,4 +476,30 @@ int airQulityLevel(char *q)
         return 4;
     }
     return 5;
+}
+
+// Language management functions
+void weather_set_language(WeatherLanguage lang)
+{
+    if (lang >= LANG_SIMPLIFIED_CHINESE && lang <= LANG_TRADITIONAL_CHINESE)
+    {
+        current_language = lang;
+    }
+}
+
+WeatherLanguage weather_get_language(void)
+{
+    return current_language;
+}
+
+void weather_toggle_language(void)
+{
+    if (current_language == LANG_SIMPLIFIED_CHINESE)
+    {
+        current_language = LANG_TRADITIONAL_CHINESE;
+    }
+    else
+    {
+        current_language = LANG_SIMPLIFIED_CHINESE;
+    }
 }

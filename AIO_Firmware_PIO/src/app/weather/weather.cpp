@@ -43,6 +43,7 @@ struct WT_Config
     String tianqi_api_key;               // api的key
     unsigned long weatherUpdataInterval; // 天气更新的时间间隔(s)
     unsigned long timeUpdataInterval;    // 日期时钟更新的时间间隔(s)
+    int language;                        // UI language: 0=Simplified Chinese, 1=Traditional Chinese
 };
 
 static void write_config(WT_Config *cfg)
@@ -58,6 +59,9 @@ static void write_config(WT_Config *cfg)
     w_data += tmp;
     memset(tmp, 0, 16);
     snprintf(tmp, 16, "%lu\n", cfg->timeUpdataInterval);
+    w_data += tmp;
+    memset(tmp, 0, 16);
+    snprintf(tmp, 16, "%d\n", cfg->language);
     w_data += tmp;
     g_flashCfg.writeFile(WEATHER_CONFIG_PATH, w_data.c_str());
 }
@@ -77,18 +81,20 @@ static void read_config(WT_Config *cfg)
         cfg->tianqi_api_key = "";
         cfg->weatherUpdataInterval = 900000; // 天气更新的时间间隔900000(900s)
         cfg->timeUpdataInterval = 900000;    // 日期时钟更新的时间间隔900000(900s)
+        cfg->language = 0;                   // Default to Simplified Chinese
         write_config(cfg);
     }
     else
     {
         // 解析数据
-        char *param[5] = {0};
-        analyseParam(info, 5, param);
+        char *param[6] = {0};
+        analyseParam(info, 6, param);
         cfg->tianqi_url = param[0];
         cfg->tianqi_city_code = param[1];
         cfg->tianqi_api_key = param[2];
         cfg->weatherUpdataInterval = atol(param[3]);
         cfg->timeUpdataInterval = atol(param[4]);
+        cfg->language = (param[5] != NULL) ? atoi(param[5]) : 0; // Default to Simplified Chinese if not present
     }
 }
 
@@ -427,6 +433,8 @@ static int weather_init(AppController *sys)
     weather_gui_init();
     // 获取配置信息
     read_config(&cfg_data);
+    // 设置UI语言
+    weather_set_language((WeatherLanguage)cfg_data.language);
 
     // 初始化运行时参数
     run_data = (WeatherAppRunData *)calloc(1, sizeof(WeatherAppRunData));
@@ -636,6 +644,10 @@ static void weather_message_handle(const char *from, const char *to,
         {
             snprintf((char *)ext_info, 32, "%lu", cfg_data.timeUpdataInterval);
         }
+        else if (!strcmp(param_key, "language"))
+        {
+            snprintf((char *)ext_info, 32, "%d", cfg_data.language);
+        }
         else
         {
             snprintf((char *)ext_info, 32, "%s", "NULL");
@@ -665,6 +677,12 @@ static void weather_message_handle(const char *from, const char *to,
         else if (!strcmp(param_key, "timeUpdataInterval"))
         {
             cfg_data.timeUpdataInterval = atol(param_val);
+        }
+        else if (!strcmp(param_key, "language"))
+        {
+            cfg_data.language = atoi(param_val);
+            // 立即更新UI语言
+            weather_set_language((WeatherLanguage)cfg_data.language);
         }
     }
     break;

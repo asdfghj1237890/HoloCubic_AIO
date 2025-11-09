@@ -75,6 +75,7 @@ String file_size(int bytes)
                         "<label class=\"input\"><span>API的个人Key</span><input type=\"text\"name=\"tianqi_api_key\"value=\"%s\"></label>"                         \
                         "<label class=\"input\"><span>天气更新周期（毫秒）</span><input type=\"text\"name=\"weatherUpdataInterval\"value=\"%s\"></label>"   \
                         "<label class=\"input\"><span>日期更新周期（毫秒）</span><input type=\"text\"name=\"timeUpdataInterval\"value=\"%s\"></label>"      \
+                        "<label class=\"input\"><span>界面语言</span><input class=\"radio\" type=\"radio\" value=\"0\" name=\"language\" %s>简体中文<input class=\"radio\" type=\"radio\" value=\"1\" name=\"language\" %s>繁體中文</label>" \
                         "</label><input class=\"btn\" type=\"submit\" name=\"submit\" value=\"保存\"></form>"
 
 #define WEATHER_OLD_SETTING "<form method=\"GET\" action=\"saveWeatherOldConf\">"                                                                                       \
@@ -315,6 +316,7 @@ void weather_setting()
     char tianqi_api_key[40];
     char weatherUpdataInterval[32];
     char timeUpdataInterval[32];
+    char language[32];
     // 读取数据
     app_controller->send_to(SERVER_APP_NAME, "Weather", APP_MESSAGE_READ_CFG,
                             NULL, NULL);
@@ -328,11 +330,20 @@ void weather_setting()
                             (void *)"weatherUpdataInterval", weatherUpdataInterval);
     app_controller->send_to(SERVER_APP_NAME, "Weather", APP_MESSAGE_GET_PARAM,
                             (void *)"timeUpdataInterval", timeUpdataInterval);
+    app_controller->send_to(SERVER_APP_NAME, "Weather", APP_MESSAGE_GET_PARAM,
+                            (void *)"language", language);
+    
+    int lang = atoi(language);
+    const char *lang0_checked = (lang == 0) ? "checked" : "";
+    const char *lang1_checked = (lang == 1) ? "checked" : "";
+    
     sprintf(buf, WEATHER_SETTING,
             tianqi_url, tianqi_city_code,
             tianqi_api_key,
             weatherUpdataInterval,
-            timeUpdataInterval);
+            timeUpdataInterval,
+            lang0_checked,
+            lang1_checked);
     webpage = buf;
     Send_HTML(webpage);
 }
@@ -608,6 +619,10 @@ void saveWeatherConf(void)
                             APP_MESSAGE_SET_PARAM,
                             (void *)"timeUpdataInterval",
                             (void *)server.arg("timeUpdataInterval").c_str());
+    app_controller->send_to(SERVER_APP_NAME, "Weather",
+                            APP_MESSAGE_SET_PARAM,
+                            (void *)"language",
+                            (void *)server.arg("language").c_str());
     // 持久化数据
     app_controller->send_to(SERVER_APP_NAME, "Weather", APP_MESSAGE_WRITE_CFG,
                             NULL, NULL);
