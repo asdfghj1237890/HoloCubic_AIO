@@ -9,14 +9,24 @@
 #include <map>
 
 #define WEATHER_APP_NAME "Weather"
-#define WEATHER_NOW_API "https://www.yiketianqi.com/free/day?appid=%s&appsecret=%s&unescape=1&city=%s"
+
+// Old Amap API (commented out, kept for reference)
+// #define WEATHER_NOW_API "https://www.yiketianqi.com/free/day?appid=%s&appsecret=%s&unescape=1&city=%s"
 // v1.yiketianqi.com/api?unescape=1&version=v61
 // 更新使用高德地图 接口文档 https://developer.amap.com/api/webservice/guide/api/weatherinfo
 // 创建服务 https://lbs.amap.com/api/webservice/create-project-and-key
 // 天气对照表 https://lbs.amap.com/api/webservice/guide/tools/weather-code/
+// #define WEATHER_LIVES_API "http://restapi.amap.com/v3/weather/weatherInfo?key=%s&city=%s&extensions=base"
+// #define WEATHER_DALIY_FORECAST_API "http://restapi.amap.com/v3/weather/weatherInfo?key=%s&city=%s&extensions=all"
 
-#define WEATHER_LIVES_API "http://restapi.amap.com/v3/weather/weatherInfo?key=%s&city=%s&extensions=base"
-#define WEATHER_DALIY_FORECAST_API "http://restapi.amap.com/v3/weather/weatherInfo?key=%s&city=%s&extensions=all"
+// AccuWeather API documentation: https://developer.accuweather.com/accuweather-current-conditions-api/apis
+// Location Search: Get location key for a city
+// Current Conditions: Get current weather data
+// 5-Day Forecast: Get 5-day weather forecast
+#define LOCATION_IP_API "https://dataservice.accuweather.com/locations/v1/cities/ipaddress?apikey=%s&language=zh-TW"
+#define LOCATION_SEARCH_API "https://dataservice.accuweather.com/locations/v1/cities/search?apikey=%s&q=%s&language=zh-TW"
+#define WEATHER_CURRENT_API "https://dataservice.accuweather.com/currentconditions/v1/%s?apikey=%s&language=zh-CN&details=true"
+#define WEATHER_FORECAST_API "https://dataservice.accuweather.com/forecasts/v1/daily/5day/%s?apikey=%s&language=zh-CN&details=true&metric=true"
 #define TIME_API "https://acs.m.taobao.com/gw/mtop.common.getTimestamp/"
 #define WEATHER_PAGE_SIZE 2
 #define UPDATE_WEATHER 0x01       // 更新天气
@@ -35,12 +45,25 @@
 // bool isUdpInit = false;
 
 // 天气的持久化配置
-#define WEATHER_CONFIG_PATH "/weather_2111.cfg"
+#define WEATHER_CONFIG_PATH "/weather_accu.cfg"
+
+// Old config structure (commented out, kept for reference)
+// struct WT_Config
+// {
+//     String tianqi_url;                   // tianqiapi 的url
+//     String tianqi_city_code;             // 城市名或代码
+//     String tianqi_api_key;               // api的key
+//     unsigned long weatherUpdataInterval; // 天气更新的时间间隔(s)
+//     unsigned long timeUpdataInterval;    // 日期时钟更新的时间间隔(s)
+//     int language;                        // UI language: 0=Simplified Chinese, 1=Traditional Chinese
+// };
+
+// New config structure for AccuWeather
 struct WT_Config
 {
-    String tianqi_url;                   // tianqiapi 的url
-    String tianqi_city_code;             // 城市名或代码
-    String tianqi_api_key;               // api的key
+    String api_key;                      // AccuWeather API key
+    String city_name;                    // City name for location search
+    String location_key;                 // AccuWeather location key (cached)
     unsigned long weatherUpdataInterval; // 天气更新的时间间隔(s)
     unsigned long timeUpdataInterval;    // 日期时钟更新的时间间隔(s)
     int language;                        // UI language: 0=Simplified Chinese, 1=Traditional Chinese
@@ -51,9 +74,9 @@ static void write_config(WT_Config *cfg)
     char tmp[16];
     // 将配置数据保存在文件中（持久化）
     String w_data;
-    w_data = w_data + cfg->tianqi_url + "\n";
-    w_data = w_data + cfg->tianqi_city_code + "\n";
-    w_data = w_data + cfg->tianqi_api_key + "\n";
+    w_data = w_data + cfg->api_key + "\n";
+    w_data = w_data + cfg->city_name + "\n";
+    w_data = w_data + cfg->location_key + "\n";
     memset(tmp, 0, 16);
     snprintf(tmp, 16, "%lu\n", cfg->weatherUpdataInterval);
     w_data += tmp;
@@ -70,15 +93,15 @@ static void read_config(WT_Config *cfg)
 {
     // 如果有需要持久化配置文件 可以调用此函数将数据存在flash中
     // 配置文件名最好以APP名为开头 以".cfg"结尾，以免多个APP读取混乱
-    char info[128] = {0};
+    char info[256] = {0};
     uint16_t size = g_flashCfg.readFile(WEATHER_CONFIG_PATH, (uint8_t *)info);
     info[size] = 0;
     if (size == 0)
     {
         // 默认值
-        cfg->tianqi_url = "restapi.amap.com/v3/weather/weatherInfo";
-        cfg->tianqi_city_code = "北京"; // "110000";
-        cfg->tianqi_api_key = "";
+        cfg->api_key = "xxxxxxxxxx";
+        cfg->city_name = "Beijing";          // Default to Beijing (change via WebServer if needed)
+        cfg->location_key = "";              // Will be fetched on first run
         cfg->weatherUpdataInterval = 900000; // 天气更新的时间间隔900000(900s)
         cfg->timeUpdataInterval = 900000;    // 日期时钟更新的时间间隔900000(900s)
         cfg->language = 0;                   // Default to Simplified Chinese
@@ -89,9 +112,9 @@ static void read_config(WT_Config *cfg)
         // 解析数据
         char *param[6] = {0};
         analyseParam(info, 6, param);
-        cfg->tianqi_url = param[0];
-        cfg->tianqi_city_code = param[1];
-        cfg->tianqi_api_key = param[2];
+        cfg->api_key = param[0];
+        cfg->city_name = param[1];
+        cfg->location_key = param[2];
         cfg->weatherUpdataInterval = atol(param[3]);
         cfg->timeUpdataInterval = atol(param[4]);
         cfg->language = (param[5] != NULL) ? atoi(param[5]) : 0; // Default to Simplified Chinese if not present
@@ -127,81 +150,112 @@ enum WEA_EVENT_ID
 };
 
 /*
+Old Amap weather mapping (commented out, kept for reference)
 高德天气接口提供的天气
 https://lbs.amap.com/api/webservice/guide/tools/weather-code
 */
 // std::map<String, int> weatherMap = {{"qin", 0}, {"yin", 1}, {"yu", 2}, {"yun", 3}, {"bingbao", 4}, {"wu", 5}, {"shachen", 6}, {"lei", 7}, {"xue", 8}};
-std::map<String, int> weatherMap = {
-    {"晴", 0},
-    {"少云", 0},
-    {"晴间多云", 3},
-    {"多云", 3},
-    {"阴", 1},
-    {"有风", 3},
-    {"平静", 3},
-    {"微风", 3},
-    {"和风", 3},
-    {"清风", 3},
-    {"强风/劲风", 3},
-    {"疾风", 1},
-    {"大风", 1},
-    {"烈风", 1},
-    {"风暴", 1},
-    {"狂爆风", 1},
-    {"飓风", 1},
-    {"热带风暴", 1},
-    {"霾", 5},
-    {"中度霾", 5},
-    {"重度霾", 5},
-    {"严重霾", 5},
-    {"阵雨", 2},
-    {"雷阵雨", 7},
-    {"雷阵雨并伴有冰雹", 4},
-    {"小雨", 2},
-    {"中雨", 2},
-    {"大雨", 2},
-    {"暴雨", 2},
-    {"大暴雨", 2},
-    {"特大暴雨", 2},
-    {"强阵雨", 2},
-    {"强雷阵雨", 7},
-    {"极端降雨", 2},
-    {"毛毛雨/细雨", 2},
-    {"雨", 2},
-    {"小雨-中雨", 2},
-    {"中雨-大雨", 2},
-    {"大雨-暴雨", 2},
-    {"暴雨-大暴雨", 2},
-    {"大暴雨-特大暴雨", 2},
-    {"雨雪天气", 8},
-    {"雨夹雪", 8},
-    {"阵雨夹雪", 8},
-    {"冻雨", 4},
-    {"雪", 8},
-    {"阵雪", 8},
-    {"小雪", 8},
-    {"中雪", 8},
-    {"大雪", 8},
-    {"暴雪", 8},
-    {"小雪-中雪", 8},
-    {"中雪-大雪", 8},
-    {"大雪-暴雪", 8},
-    {"浮尘", 6},
-    {"扬沙", 6},
-    {"沙尘暴", 6},
-    {"强沙尘暴", 6},
-    {"龙卷风", 6},
-    {"雾", 5},
-    {"浓雾", 5},
-    {"强浓雾", 5},
-    {"轻雾", 5},
-    {"大雾", 5},
-    {"特强浓雾", 5},
-    {"热", 0},
-    {"冷", 0},
-    {"未知", 0}
+// std::map<String, int> weatherMap = {
+//     {"晴", 0},
+//     {"少云", 0},
+//     {"晴间多云", 3},
+//     {"多云", 3},
+//     {"阴", 1},
+//     {"有风", 3},
+//     {"平静", 3},
+//     {"微风", 3},
+//     {"和风", 3},
+//     {"清风", 3},
+//     {"强风/劲风", 3},
+//     {"疾风", 1},
+//     {"大风", 1},
+//     {"烈风", 1},
+//     {"风暴", 1},
+//     {"狂爆风", 1},
+//     {"飓风", 1},
+//     {"热带风暴", 1},
+//     {"霾", 5},
+//     {"中度霾", 5},
+//     {"重度霾", 5},
+//     {"严重霾", 5},
+//     {"阵雨", 2},
+//     {"雷阵雨", 7},
+//     {"雷阵雨并伴有冰雹", 4},
+//     {"小雨", 2},
+//     {"中雨", 2},
+//     {"大雨", 2},
+//     {"暴雨", 2},
+//     {"大暴雨", 2},
+//     {"特大暴雨", 2},
+//     {"强阵雨", 2},
+//     {"强雷阵雨", 7},
+//     {"极端降雨", 2},
+//     {"毛毛雨/细雨", 2},
+//     {"雨", 2},
+//     {"小雨-中雨", 2},
+//     {"中雨-大雨", 2},
+//     {"大雨-暴雨", 2},
+//     {"暴雨-大暴雨", 2},
+//     {"大暴雨-特大暴雨", 2},
+//     {"雨雪天气", 8},
+//     {"雨夹雪", 8},
+//     {"阵雨夹雪", 8},
+//     {"冻雨", 4},
+//     {"雪", 8},
+//     {"阵雪", 8},
+//     {"小雪", 8},
+//     {"中雪", 8},
+//     {"大雪", 8},
+//     {"暴雪", 8},
+//     {"小雪-中雪", 8},
+//     {"中雪-大雪", 8},
+//     {"大雪-暴雪", 8},
+//     {"浮尘", 6},
+//     {"扬沙", 6},
+//     {"沙尘暴", 6},
+//     {"强沙尘暴", 6},
+//     {"龙卷风", 6},
+//     {"雾", 5},
+//     {"浓雾", 5},
+//     {"强浓雾", 5},
+//     {"轻雾", 5},
+//     {"大雾", 5},
+//     {"特强浓雾", 5},
+//     {"热", 0},
+//     {"冷", 0},
+//     {"未知", 0}
+// };
 
-};
+/*
+AccuWeather Icon Codes Mapping
+https://developer.accuweather.com/weather-icons
+Icon codes range from 1-44
+Mapping to local weather icons: 
+0=sunny, 1=cloudy, 2=rainy, 3=partly_cloudy, 4=hail, 5=fog, 6=dust, 7=thunder, 8=snowy
+*/
+int mapAccuWeatherIcon(int iconCode) {
+    if (iconCode >= 1 && iconCode <= 2) return 0;      // Sunny/Mostly Sunny
+    if (iconCode >= 3 && iconCode <= 4) return 3;      // Partly Sunny/Cloudy
+    if (iconCode >= 5 && iconCode <= 6) return 3;      // Hazy Sunshine/Mostly Cloudy
+    if (iconCode >= 7 && iconCode <= 8) return 1;      // Cloudy/Dreary
+    if (iconCode == 11) return 5;                       // Fog
+    if (iconCode == 12) return 2;                       // Showers
+    if (iconCode >= 13 && iconCode <= 14) return 3;    // Mostly Cloudy w/ Showers
+    if (iconCode == 15) return 7;                       // Thunderstorms
+    if (iconCode >= 16 && iconCode <= 17) return 7;    // Mostly Cloudy w/ T-Storms
+    if (iconCode == 18) return 2;                       // Rain
+    if (iconCode >= 19 && iconCode <= 21) return 8;    // Flurries/Snow
+    if (iconCode == 22) return 8;                       // Snow
+    if (iconCode >= 23 && iconCode <= 24) return 8;    // Mostly Cloudy w/ Snow
+    if (iconCode == 25) return 8;                       // Sleet
+    if (iconCode == 26) return 8;                       // Freezing Rain
+    if (iconCode >= 29 && iconCode <= 30) return 8;    // Rain and Snow
+    if (iconCode >= 31 && iconCode <= 32) return 0;    // Hot/Cold
+    if (iconCode >= 33 && iconCode <= 38) return 3;    // Night conditions (map to partly cloudy)
+    if (iconCode >= 39 && iconCode <= 42) return 2;    // Night rain/showers
+    if (iconCode >= 43 && iconCode <= 44) return 8;    // Night snow
+    return 3;                                           // Default to partly cloudy
+}
 
 static void task_update(void *parameter); // 异步更新任务
 
@@ -218,94 +272,356 @@ static int windLevelAnalyse(String str)
     return ret;
 }
 
+// New function for AccuWeather: Get location key (auto-detect by IP or search by city name)
+static bool get_location_key(void)
+{
+    if (WL_CONNECTED != WiFi.status())
+        return false;
+
+    // If location key is already cached, check if we need to refresh
+    if (cfg_data.location_key.length() > 0)
+    {
+        // Force refresh if city name is empty (user wants to use IP detection)
+        if (cfg_data.city_name.length() == 0)
+        {
+            Serial.println("[Info] City name is empty, forcing IP-based re-detection...");
+            cfg_data.location_key = "";  // Clear cached location key
+        }
+        else
+        {
+            Serial.printf("[Info] Using cached location key: %s (City: %s)\n", 
+                          cfg_data.location_key.c_str(), 
+                          cfg_data.city_name.c_str());
+            return true;
+        }
+    }
+    
+    Serial.println("[Info] No cached location key, fetching from API...");
+
+    HTTPClient http;
+    http.setTimeout(3000);
+    char api[256] = {0};
+    bool useIPDetection = false;
+    bool tryIPFallback = false;
+
+    // Determine which API to use
+    if (cfg_data.city_name.length() == 0)
+    {
+        // No city name: use IP detection
+        useIPDetection = true;
+        snprintf(api, 256, LOCATION_IP_API, cfg_data.api_key.c_str());
+        Serial.println("[Info] Using IP-based location detection");
+    }
+    else
+    {
+        // City name provided: try city search first
+        snprintf(api, 256, LOCATION_SEARCH_API,
+                 cfg_data.api_key.c_str(),
+                 cfg_data.city_name.c_str());
+        Serial.printf("[Info] Searching for city: %s\n", cfg_data.city_name.c_str());
+    }
+    
+    Serial.print("Location API = ");
+    Serial.println(api);
+    
+    http.begin(api);
+    http.addHeader("User-Agent", "ESP32-Weather-Station");
+
+    int httpCode = http.GET();
+    Serial.printf("[HTTP] Response code: %d\n", httpCode);
+    
+    if (httpCode > 0)
+    {
+        if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY)
+        {
+            String payload = http.getString();
+            Serial.println("[API Response]:");
+            Serial.println(payload);
+            
+            // Increase memory for location search results (can return multiple cities)
+            DynamicJsonDocument doc(4096);
+            DeserializationError error = deserializeJson(doc, payload);
+            
+            if (error)
+            {
+                Serial.print("[JSON] Parse error: ");
+                Serial.println(error.c_str());
+                Serial.println("[Info] Try increasing DynamicJsonDocument size or simplifying query");
+                http.end();
+                return false;
+            }
+            
+            // Check if response contains error
+            if (doc.containsKey("Code"))
+            {
+                String errorCode = doc["Code"].as<String>();
+                String errorMsg = doc["Message"].as<String>();
+                Serial.printf("[API Error] Code: %s, Message: %s\n", errorCode.c_str(), errorMsg.c_str());
+                http.end();
+                return false;
+            }
+            
+            // IP-based API returns object, search API returns array
+            JsonObject location;
+            if (doc.is<JsonObject>())
+            {
+                location = doc.as<JsonObject>();
+            }
+            else if (doc.is<JsonArray>() && doc.size() > 0)
+            {
+                location = doc[0];
+            }
+            
+            if (!location.isNull() && location.containsKey("Key"))
+            {
+                cfg_data.location_key = location["Key"].as<String>();
+                String cityName = location["LocalizedName"].as<String>();
+                String country = location["Country"]["LocalizedName"].as<String>();
+                
+                // Update city name if using IP detection
+                if (useIPDetection || cfg_data.city_name.length() == 0)
+                {
+                    cfg_data.city_name = location["EnglishName"].as<String>();
+                }
+                
+                Serial.print("[Success] Location Key: ");
+                Serial.println(cfg_data.location_key);
+                Serial.printf("[Info] City: %s, Country: %s\n", cityName.c_str(), country.c_str());
+                
+                // Cache the location key and city name
+                write_config(&cfg_data);
+                http.end();
+                return true;
+            }
+            else
+            {
+                Serial.println("[APP] Get location key failed - no valid location data in response");
+                
+                // If city search failed, try IP-based detection as fallback
+                if (!useIPDetection && cfg_data.city_name.length() > 0)
+                {
+                    Serial.println("[Info] City search failed, trying IP-based detection as fallback...");
+                    http.end();
+                    
+                    // Try IP-based detection
+                    snprintf(api, 256, LOCATION_IP_API, cfg_data.api_key.c_str());
+                    Serial.print("Location API (IP fallback) = ");
+                    Serial.println(api);
+                    
+                    http.begin(api);
+                    http.addHeader("User-Agent", "ESP32-Weather-Station");
+                    
+                    httpCode = http.GET();
+                    Serial.printf("[HTTP] Response code: %d\n", httpCode);
+                    
+                    if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY)
+                    {
+                    payload = http.getString();
+                    Serial.println("[API Response (IP fallback)]:");
+                    Serial.println(payload);
+                    
+                    // IP API returns single object, needs less memory
+                    DynamicJsonDocument doc2(2048);
+                    error = deserializeJson(doc2, payload);
+                    
+                    if (!error && doc2.is<JsonObject>())
+                    {
+                        location = doc2.as<JsonObject>();
+                            if (!location.isNull() && location.containsKey("Key"))
+                            {
+                                cfg_data.location_key = location["Key"].as<String>();
+                                String cityName = location["LocalizedName"].as<String>();
+                                String country = location["Country"]["LocalizedName"].as<String>();
+                                cfg_data.city_name = location["EnglishName"].as<String>();
+                                
+                                Serial.print("[Success] Location Key (IP fallback): ");
+                                Serial.println(cfg_data.location_key);
+                                Serial.printf("[Info] Auto-detected City: %s, Country: %s\n", cityName.c_str(), country.c_str());
+                                
+                                write_config(&cfg_data);
+                                http.end();
+                                return true;
+                            }
+                        }
+                    }
+                    Serial.println("[Error] IP-based fallback also failed");
+                }
+                
+                if (useIPDetection)
+                {
+                    Serial.println("[Info] IP-based detection failed");
+                    Serial.println("[Note] AccuWeather uses your public IP (WAN IP), not local 192.168.x.x");
+                    Serial.println("[Note] Your API key might be restricted to specific countries/regions");
+                }
+                
+                Serial.println("[Suggestion] This API key might only work with specific cities");
+                Serial.println("[Examples] Try: Beijing, Shanghai, Guangzhou, Shenzhen, Chengdu, Wuhan");
+            }
+        }
+        else
+        {
+            Serial.printf("[HTTP] Unexpected status code: %d\n", httpCode);
+        }
+    }
+    else
+    {
+        Serial.printf("[HTTP] GET failed, error: %s\n", http.errorToString(httpCode).c_str());
+    }
+    http.end();
+    return false;
+}
+
+// Old get_weather function (commented out, kept for reference)
+// static void get_weather(void)
+// {
+//     if (WL_CONNECTED != WiFi.status())
+//         return;
+//
+//     HTTPClient http;
+//     http.setTimeout(1000);
+//     char api[128] = {0};
+//
+//     snprintf(api, 128, WEATHER_LIVES_API,
+//              cfg_data.tianqi_api_key.c_str(),
+//              cfg_data.tianqi_city_code.c_str());
+//     Serial.print("API = ");
+//     Serial.println(api);
+//     http.begin(api);
+//
+//     int httpCode = http.GET();
+//     if (httpCode > 0)
+//     {
+//         if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY)
+//         {
+//             String payload = http.getString();
+//             DynamicJsonDocument doc(768);
+//             deserializeJson(doc, payload);
+//             Serial.println(payload);
+//             if (doc.containsKey("lives"))
+//             {
+//                 JsonObject weather_live = doc["lives"][0];
+//                 strcpy(run_data->wea.cityname, weather_live["city"].as<String>().c_str());
+//                 run_data->wea.temperature = weather_live["temperature"].as<int>();
+//                 run_data->wea.humidity = weather_live["humidity"].as<int>();
+//                 run_data->wea.weather_code = weatherMap[weather_live["weather"].as<String>()];
+//                 strcpy(run_data->wea.weather, weather_live["weather"].as<String>().c_str());
+//                 strcpy(run_data->wea.windDir, weather_live["winddirection"].as<String>().c_str());
+//                 strcpy(run_data->wea.windpower, weather_live["windpower"].as<String>().c_str());
+//                 run_data->wea.airQulity = airQulityLevel(run_data->wea.windpower);
+//                 Serial.println(" Get weather info OK\n");
+//             }
+//             else
+//             {
+//                 Serial.println("[APP] Get weather error,info");
+//                 String err_info = doc["info"];
+//                 Serial.print(err_info);
+//                 Serial.println("");
+//             }
+//         }
+//     }
+//     else
+//     {
+//         Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
+//     }
+//     http.end();
+// }
+
+// New get_weather function for AccuWeather
 static void get_weather(void)
 {
     if (WL_CONNECTED != WiFi.status())
         return;
 
-    HTTPClient http;
-    http.setTimeout(1000);
-    char api[128] = {0};
+    // Ensure we have location key first
+    if (!get_location_key())
+    {
+        Serial.println("[APP] Cannot get weather - location key not available");
+        return;
+    }
 
-    snprintf(api, 128, WEATHER_LIVES_API,
-             cfg_data.tianqi_api_key.c_str(),
-             cfg_data.tianqi_city_code.c_str());
-    Serial.print("API = ");
+    HTTPClient http;
+    http.setTimeout(2000);
+    char api[256] = {0};
+
+    snprintf(api, 256, WEATHER_CURRENT_API,
+             cfg_data.location_key.c_str(),
+             cfg_data.api_key.c_str());
+    Serial.print("Current Weather API = ");
     Serial.println(api);
     http.begin(api);
 
     int httpCode = http.GET();
     if (httpCode > 0)
     {
-        // file found at server
         if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY)
         {
             String payload = http.getString();
-            DynamicJsonDocument doc(768);
+            DynamicJsonDocument doc(2048);
             deserializeJson(doc, payload);
             Serial.println(payload);
-            if (doc.containsKey("lives"))
+            
+            if (doc.is<JsonArray>() && doc.size() > 0)
             {
                 /*
-                {
-                "status": "1",
-                "count": "1",
-                "info": "OK",
-                "infocode": "10000",
-                "lives": [
-                    {
-                        "province": "河南",
-                        "city": "涧西区",
-                        "adcode": "410305",
-                        "weather": "晴",
-                        "temperature": "19",
-                        "winddirection": "东北",
-                        "windpower": "≤3",
-                        "humidity": "38",
-                        "reporttime": "2024-03-21 18:30:05",
-                        "temperature_float": "19.0",
-                        "humidity_float": "38.0"
-                    }
-                ]
-            }
+                AccuWeather Current Conditions Response Example:
+                [{
+                    "LocalObservationDateTime": "2024-03-21T18:30:00+08:00",
+                    "WeatherText": "晴朗",
+                    "WeatherIcon": 1,
+                    "Temperature": {
+                        "Metric": {"Value": 19.0, "Unit": "C"}
+                    },
+                    "RelativeHumidity": 38,
+                    "Wind": {
+                        "Direction": {"Localized": "東北"},
+                        "Speed": {"Metric": {"Value": 5.5, "Unit": "km/h"}}
+                    },
+                    "UVIndex": 3,
+                    "UVIndexText": "Moderate"
+                }]
                 */
-                JsonObject weather_live = doc["lives"][0];
-                // 获取城市区域中文
-                strcpy(run_data->wea.cityname, weather_live["city"].as<String>().c_str());
-                // 温度
-                run_data->wea.temperature = weather_live["temperature"].as<int>();
-                // 湿度
-                run_data->wea.humidity = weather_live["humidity"].as<int>();
-                // 天气情况
-                run_data->wea.weather_code = weatherMap[weather_live["weather"].as<String>()];
+                JsonObject current = doc[0];
                 
-                strcpy(run_data->wea.weather, weather_live["weather"].as<String>().c_str());
-                // 风速
-                strcpy(run_data->wea.windDir, weather_live["winddirection"].as<String>().c_str());
-                strcpy(run_data->wea.windpower, weather_live["windpower"].as<String>().c_str());
-                Serial.printf("wea.windpower  = %s", run_data->wea.windpower);
+                // City name (use configured city name)
+                strcpy(run_data->wea.cityname, cfg_data.city_name.c_str());
+                
+                // Temperature (Celsius)
+                run_data->wea.temperature = current["Temperature"]["Metric"]["Value"].as<int>();
+                
+                // Humidity
+                run_data->wea.humidity = current["RelativeHumidity"].as<int>();
+                
+                // Weather icon code mapping
+                int iconCode = current["WeatherIcon"].as<int>();
+                run_data->wea.weather_code = mapAccuWeatherIcon(iconCode);
+                
+                // Weather description
+                String weatherText = current["WeatherText"].as<String>();
+                strcpy(run_data->wea.weather, weatherText.c_str());
+                
+                // Wind direction
+                String windDir = current["Wind"]["Direction"]["Localized"].as<String>();
+                strcpy(run_data->wea.windDir, windDir.c_str());
+                
+                // Wind speed (convert km/h to level)
+                float windSpeed = current["Wind"]["Speed"]["Metric"]["Value"].as<float>();
+                int windLevel = (int)(windSpeed / 5.0); // Rough conversion: 0-5km/h = level 0, 5-10 = level 1, etc.
+                if (windLevel > 12) windLevel = 12;
+                snprintf(run_data->wea.windpower, 10, "%d", windLevel);
+                
+                // Air quality estimate from UV index (since AccuWeather doesn't provide AQI in free tier)
+                int uvIndex = current["UVIndex"].as<int>();
+                if (uvIndex <= 2) run_data->wea.airQulity = 0;      // Good
+                else if (uvIndex <= 5) run_data->wea.airQulity = 1; // Moderate
+                else if (uvIndex <= 7) run_data->wea.airQulity = 2; // Fair
+                else if (uvIndex <= 10) run_data->wea.airQulity = 3; // Poor
+                else run_data->wea.airQulity = 4;                    // Very Poor
 
-                // 空气质量没有这个参数，只能用风速来粗略替换了
-                run_data->wea.airQulity = airQulityLevel(run_data->wea.windpower);
-
-                // weather_info.city = weather_live["city"].as<String>();
-                // weather_info.weather = weather_live["weather"].as<String>();
-                // weather_info.winddirection = weather_live["winddirection"].as<String>();
-                // weather_info.windpower = weather_live["windpower"].as<String>();
-                // weather_info.temperature = weather_live["temperature"].as<String>();
-                // weather_info.humidity = weather_live["humidity"].as<String>();
-                // weather_info.animIndex = get_weather_anim(weather_info.weather, getDateTime().hour());
-                // weather_info.lastUpdate = millis();
-
-                Serial.println(" Get weather info OK\n");
+                Serial.println("Get AccuWeather current conditions OK\n");
             }
             else
             {
-                // 返回值错误，记录
-                Serial.println("[APP] Get weather error,info");
-                String err_info = doc["info"];
-                Serial.print(err_info);
-                Serial.println("");
+                Serial.println("[APP] Get weather error - invalid response format");
             }
         }
     }
@@ -362,47 +678,154 @@ static long long get_timestamp(String url)
     return run_data->preNetTimestamp;
 }
 
+// Old get_daliyWeather function (commented out, kept for reference)
+// static void get_daliyWeather(short maxT[], short minT[])
+// {
+//     if (WL_CONNECTED != WiFi.status())
+//         return;
+//
+//     HTTPClient http;
+//     http.setTimeout(1000);
+//     char api[128] = {0};
+//     snprintf(api, 128, WEATHER_DALIY_FORECAST_API,
+//              cfg_data.tianqi_api_key.c_str(),
+//              cfg_data.tianqi_city_code.c_str());
+//     Serial.print("API = ");
+//     Serial.println(api);
+//     http.begin(api);
+//
+//     int httpCode = http.GET();
+//     if (httpCode > 0)
+//     {
+//         if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY)
+//         {
+//             String payload = http.getString();
+//             Serial.println(payload);
+//             DynamicJsonDocument doc2(4096);
+//             deserializeJson(doc2, payload);
+//
+//             if (doc2.containsKey("forecasts"))
+//             {
+//                 JsonObject weather_forecast = doc2["forecasts"][0];
+//                 for (int i = 0; i < FORECAST_DAYS; i++)
+//                 {
+//                     maxT[i] = weather_forecast["casts"][i]["daytemp"].as<int>();
+//                     minT[i] = weather_forecast["casts"][i]["nighttemp"].as<int>();
+//                 }
+//                 Serial.println("Get weather cast OK\n");
+//             }
+//         }
+//     }
+//     else
+//     {
+//         Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
+//     }
+//     http.end();
+// }
+
+// New get_daliyWeather function for AccuWeather
 static void get_daliyWeather(short maxT[], short minT[])
 {
     if (WL_CONNECTED != WiFi.status())
         return;
 
+    // Ensure we have location key first
+    if (!get_location_key())
+    {
+        Serial.println("[APP] Cannot get forecast - location key not available");
+        return;
+    }
+
     HTTPClient http;
-    http.setTimeout(1000);
-    char api[128] = {0};
-    snprintf(api, 128, WEATHER_DALIY_FORECAST_API,
-             cfg_data.tianqi_api_key.c_str(),
-             cfg_data.tianqi_city_code.c_str());
-    Serial.print("API = ");
+    http.setTimeout(2000);
+    char api[256] = {0};
+    
+    snprintf(api, 256, WEATHER_FORECAST_API,
+             cfg_data.location_key.c_str(),
+             cfg_data.api_key.c_str());
+    Serial.print("Forecast API = ");
     Serial.println(api);
     http.begin(api);
 
     int httpCode = http.GET();
+    Serial.printf("[HTTP] Forecast response code: %d\n", httpCode);
+    
     if (httpCode > 0)
     {
-        // file found at server
         if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY)
         {
             String payload = http.getString();
-            Serial.println(payload);
-            DynamicJsonDocument doc2(4096);
-            deserializeJson(doc2, payload);
-            // JsonObject sk = doc2.as<JsonObject>();
-            // for (int gDW_i = 0; gDW_i < FORECAST_DAYS; ++gDW_i)
-            // {
-            //     maxT[gDW_i] = sk["data"][gDW_i]["tem_day"].as<int>();
-            //     minT[gDW_i] = sk["data"][gDW_i]["tem_night"].as<int>();
-            // }
-
-            if (doc2.containsKey("forecasts"))
+            Serial.println("[Forecast API Response]:");
+            
+            // Check if response is empty
+            if (payload.length() == 0)
             {
-                JsonObject weather_forecast = doc2["forecasts"][0];
-                for (int i = 0; i < FORECAST_DAYS; i++)
+                Serial.println("[Warning] Forecast API returned empty response");
+                Serial.println("[Info] Your API key might not have access to forecast data");
+                Serial.println("[Info] Free tier AccuWeather API may not include 5-day forecast");
+                Serial.println("[Info] Current weather will still work normally");
+                http.end();
+                return;
+            }
+            
+            Serial.println(payload);
+            
+            DynamicJsonDocument doc2(8192);
+            DeserializationError error = deserializeJson(doc2, payload);
+            
+            if (error)
+            {
+                Serial.print("[JSON] Forecast parse error: ");
+                Serial.println(error.c_str());
+                Serial.println("[Info] Forecast feature disabled, but current weather works fine");
+                http.end();
+                return;
+            }
+            
+            // Check for API error
+            if (doc2.containsKey("Code"))
+            {
+                String errorCode = doc2["Code"].as<String>();
+                String errorMsg = doc2["Message"].as<String>();
+                Serial.printf("[API Error] Forecast - Code: %s, Message: %s\n", errorCode.c_str(), errorMsg.c_str());
+                http.end();
+                return;
+            }
+
+            if (doc2.containsKey("DailyForecasts"))
+            {
+                /*
+                AccuWeather 5-Day Forecast Response Example:
                 {
-                    maxT[i] = weather_forecast["casts"][i]["daytemp"].as<int>();
-                    minT[i] = weather_forecast["casts"][i]["nighttemp"].as<int>();
+                    "DailyForecasts": [
+                        {
+                            "Date": "2024-03-21T07:00:00+08:00",
+                            "Temperature": {
+                                "Minimum": {"Value": 10.0, "Unit": "C"},
+                                "Maximum": {"Value": 25.0, "Unit": "C"}
+                            },
+                            "Day": {"Icon": 3, "IconPhrase": "Partly Sunny"},
+                            "Night": {"Icon": 35, "IconPhrase": "Partly Cloudy"}
+                        },
+                        ...
+                    ]
                 }
-                Serial.println("Get weather cast OK\n");
+                */
+                JsonArray forecasts = doc2["DailyForecasts"];
+                int numDays = min((int)forecasts.size(), FORECAST_DAYS);
+                
+                for (int i = 0; i < numDays; i++)
+                {
+                    JsonObject day = forecasts[i];
+                    maxT[i] = day["Temperature"]["Maximum"]["Value"].as<int>();
+                    minT[i] = day["Temperature"]["Minimum"]["Value"].as<int>();
+                }
+                
+                Serial.println("Get AccuWeather forecast OK\n");
+            }
+            else
+            {
+                Serial.println("[APP] Get forecast error - invalid response format");
             }
         }
     }
@@ -624,17 +1047,17 @@ static void weather_message_handle(const char *from, const char *to,
     case APP_MESSAGE_GET_PARAM:
     {
         char *param_key = (char *)message;
-        if (!strcmp(param_key, "tianqi_url"))
+        if (!strcmp(param_key, "api_key"))
         {
-            snprintf((char *)ext_info, 128, "%s", cfg_data.tianqi_url.c_str());
+            snprintf((char *)ext_info, 128, "%s", cfg_data.api_key.c_str());
         }
-        else if (!strcmp(param_key, "tianqi_city_code"))
+        else if (!strcmp(param_key, "city_name"))
         {
-            snprintf((char *)ext_info, 32, "%s", cfg_data.tianqi_city_code.c_str());
+            snprintf((char *)ext_info, 64, "%s", cfg_data.city_name.c_str());
         }
-        else if (!strcmp(param_key, "tianqi_api_key"))
+        else if (!strcmp(param_key, "location_key"))
         {
-            snprintf((char *)ext_info, 40, "%s", cfg_data.tianqi_api_key.c_str());
+            snprintf((char *)ext_info, 64, "%s", cfg_data.location_key.c_str());
         }
         else if (!strcmp(param_key, "weatherUpdataInterval"))
         {
@@ -658,17 +1081,19 @@ static void weather_message_handle(const char *from, const char *to,
     {
         char *param_key = (char *)message;
         char *param_val = (char *)ext_info;
-        if (!strcmp(param_key, "tianqi_url"))
+        if (!strcmp(param_key, "api_key"))
         {
-            cfg_data.tianqi_url = param_val;
+            cfg_data.api_key = param_val;
         }
-        else if (!strcmp(param_key, "tianqi_city_code"))
+        else if (!strcmp(param_key, "city_name"))
         {
-            cfg_data.tianqi_city_code = param_val;
+            cfg_data.city_name = param_val;
+            // Clear location key to force re-fetch when city changes
+            cfg_data.location_key = "";
         }
-        else if (!strcmp(param_key, "tianqi_api_key"))
+        else if (!strcmp(param_key, "location_key"))
         {
-            cfg_data.tianqi_api_key = param_val;
+            cfg_data.location_key = param_val;
         }
         else if (!strcmp(param_key, "weatherUpdataInterval"))
         {

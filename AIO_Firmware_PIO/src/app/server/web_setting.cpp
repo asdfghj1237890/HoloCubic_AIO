@@ -70,12 +70,11 @@ String file_size(int bytes)
                     "</label><input class=\"btn\" type=\"submit\" name=\"submit\" value=\"保存\"></form>"
 
 #define WEATHER_SETTING "<form method=\"GET\" action=\"saveWeatherConf\">"                                                                                            \
-                        "<label class=\"input\"><span>TianQi Url</span><input type=\"text\"name=\"tianqi_url\"value=\"%s\"></label>"                                  \
-                        "<label class=\"input\"><span>城市名（或填6位城市代码）</span><input type=\"text\"name=\"tianqi_city_code\"value=\"%s\"></label>" \
-                        "<label class=\"input\"><span>API的个人Key</span><input type=\"text\"name=\"tianqi_api_key\"value=\"%s\"></label>"                         \
-                        "<label class=\"input\"><span>天气更新周期（毫秒）</span><input type=\"text\"name=\"weatherUpdataInterval\"value=\"%s\"></label>"   \
-                        "<label class=\"input\"><span>日期更新周期（毫秒）</span><input type=\"text\"name=\"timeUpdataInterval\"value=\"%s\"></label>"      \
-                        "<label class=\"input\"><span>界面语言</span><input class=\"radio\" type=\"radio\" value=\"0\" name=\"language\" %s>简体中文<input class=\"radio\" type=\"radio\" value=\"1\" name=\"language\" %s>繁體中文</label>" \
+                        "<label class=\"input\"><span>AccuWeather API Key</span><input type=\"text\"name=\"api_key\"value=\"%s\"></label>"                          \
+                        "<label class=\"input\"><span>城市名稱 (City Name)</span><input type=\"text\"name=\"city_name\"value=\"%s\"></label>"                       \
+                        "<label class=\"input\"><span>天氣更新週期（毫秒）</span><input type=\"text\"name=\"weatherUpdataInterval\"value=\"%s\"></label>"   \
+                        "<label class=\"input\"><span>日期更新週期（毫秒）</span><input type=\"text\"name=\"timeUpdataInterval\"value=\"%s\"></label>"      \
+                        "<label class=\"input\"><span>界面語言</span><input class=\"radio\" type=\"radio\" value=\"0\" name=\"language\" %s>简体中文<input class=\"radio\" type=\"radio\" value=\"1\" name=\"language\" %s>繁體中文</label>" \
                         "</label><input class=\"btn\" type=\"submit\" name=\"submit\" value=\"保存\"></form>"
 
 #define WEATHER_OLD_SETTING "<form method=\"GET\" action=\"saveWeatherOldConf\">"                                                                                       \
@@ -311,9 +310,8 @@ void rgb_setting()
 void weather_setting()
 {
     char buf[2048];
-    char tianqi_url[128];
-    char tianqi_city_code[32];
-    char tianqi_api_key[40];
+    char api_key[128];
+    char city_name[64];
     char weatherUpdataInterval[32];
     char timeUpdataInterval[32];
     char language[32];
@@ -321,11 +319,9 @@ void weather_setting()
     app_controller->send_to(SERVER_APP_NAME, "Weather", APP_MESSAGE_READ_CFG,
                             NULL, NULL);
     app_controller->send_to(SERVER_APP_NAME, "Weather", APP_MESSAGE_GET_PARAM,
-                            (void *)"tianqi_url", tianqi_url);
+                            (void *)"api_key", api_key);
     app_controller->send_to(SERVER_APP_NAME, "Weather", APP_MESSAGE_GET_PARAM,
-                            (void *)"tianqi_city_code", tianqi_city_code);
-    app_controller->send_to(SERVER_APP_NAME, "Weather", APP_MESSAGE_GET_PARAM,
-                            (void *)"tianqi_api_key", tianqi_api_key);
+                            (void *)"city_name", city_name);
     app_controller->send_to(SERVER_APP_NAME, "Weather", APP_MESSAGE_GET_PARAM,
                             (void *)"weatherUpdataInterval", weatherUpdataInterval);
     app_controller->send_to(SERVER_APP_NAME, "Weather", APP_MESSAGE_GET_PARAM,
@@ -338,8 +334,8 @@ void weather_setting()
     const char *lang1_checked = (lang == 1) ? "checked" : "";
     
     sprintf(buf, WEATHER_SETTING,
-            tianqi_url, tianqi_city_code,
-            tianqi_api_key,
+            api_key,
+            city_name,
             weatherUpdataInterval,
             timeUpdataInterval,
             lang0_checked,
@@ -597,20 +593,16 @@ void saveRgbConf(void)
 
 void saveWeatherConf(void)
 {
-    Send_HTML(F("<h1>设置成功! 退出APP或者继续其他设置.</h1>"));
+    Send_HTML(F("<h1>設置成功! 退出APP或者繼續其他設置.</h1>"));
 
     app_controller->send_to(SERVER_APP_NAME, "Weather",
                             APP_MESSAGE_SET_PARAM,
-                            (void *)"tianqi_url",
-                            (void *)server.arg("tianqi_url").c_str());
+                            (void *)"api_key",
+                            (void *)server.arg("api_key").c_str());
     app_controller->send_to(SERVER_APP_NAME, "Weather",
                             APP_MESSAGE_SET_PARAM,
-                            (void *)"tianqi_city_code",
-                            (void *)server.arg("tianqi_city_code").c_str());
-    app_controller->send_to(SERVER_APP_NAME, "Weather",
-                            APP_MESSAGE_SET_PARAM,
-                            (void *)"tianqi_api_key",
-                            (void *)server.arg("tianqi_api_key").c_str());
+                            (void *)"city_name",
+                            (void *)server.arg("city_name").c_str());
     app_controller->send_to(SERVER_APP_NAME, "Weather",
                             APP_MESSAGE_SET_PARAM,
                             (void *)"weatherUpdataInterval",
