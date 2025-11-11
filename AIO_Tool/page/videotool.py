@@ -16,6 +16,9 @@ import tkinter as tk
 import util.tkutils as tku
 from tkinter import ttk
 from tkinter import filedialog
+import subprocess
+import threading
+from tkinter import scrolledtext
 
 
 class VideoTool(object):
@@ -54,6 +57,14 @@ class VideoTool(object):
         self.init_options(self.connor_param_frame)  # 初始化参数
 
         output_param_frame.pack(side=tk.TOP, pady=5)
+
+        # Add log display area
+        log_frame = tk.LabelFrame(father, text="Conversion Log", bg="white")
+        self.log_text = scrolledtext.ScrolledText(log_frame, width=100, height=15, 
+                                                   wrap=tk.WORD, bg="black", fg="white",
+                                                   font=("Consolas", 9))
+        self.log_text.pack(padx=5, pady=5, fill=tk.BOTH, expand=True)
+        log_frame.pack(side=tk.TOP, pady=5, fill=tk.BOTH, expand=True)
 
     def init_path(self, father):
         """
@@ -144,55 +155,168 @@ class VideoTool(object):
             self.m_dst_path_entry.delete(0, tk.END)  # 清空文本框
             self.m_dst_path_entry.insert(tk.END, filepath)
 
+    def log(self, message):
+        """Add message to log display"""
+        self.log_text.insert(tk.END, message + "\n")
+        self.log_text.see(tk.END)
+        self.log_text.update()
+
+    def clear_log(self):
+        """Clear log display"""
+        self.log_text.delete(1.0, tk.END)
+
+    def run_ffmpeg_command(self, cmd, description):
+        """Run ffmpeg command and capture output in real-time"""
+        self.log(f"\n{'='*60}")
+        self.log(f"[{description}]")
+        try:
+            self.log(f"Command: {cmd}")
+        except:
+            self.log(f"Command: [Command contains non-ASCII characters]")
+        self.log(f"{'='*60}\n")
+        
+        try:
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                shell=True,
+                universal_newlines=False,
+                bufsize=1
+            )
+            
+            for line in iter(process.stdout.readline, b''):
+                try:
+                    # Try UTF-8 first, then fallback to system encoding with error handling
+                    try:
+                        decoded_line = line.decode('utf-8').strip()
+                    except UnicodeDecodeError:
+                        try:
+                            decoded_line = line.decode('gbk').strip()
+                        except UnicodeDecodeError:
+                            decoded_line = line.decode('utf-8', errors='ignore').strip()
+                    
+                    if decoded_line:
+                        self.log(decoded_line)
+                except Exception as e:
+                    # Skip lines that cannot be decoded
+                    pass
+            
+            process.wait()
+            
+            if process.returncode == 0:
+                self.log(f"\n✓ {description} completed successfully!\n")
+                return True
+            else:
+                self.log(f"\n✗ {description} failed with return code {process.returncode}\n")
+                return False
+        except Exception as e:
+            self.log(f"\n✗ Error: {str(e)}\n")
+            return False
+
     def trans_format(self):
         """
         格式转化
         """
+        # Run conversion in a separate thread to avoid blocking UI
+        thread = threading.Thread(target=self._trans_format_thread)
+        thread.daemon = True
+        thread.start()
+
+    def _trans_format_thread(self):
+        """
+        Actual conversion logic running in thread
+        """
         cur_dir = os.getcwd()  # 当前目录
         self.trans_botton["text"] = self.i18n.t("converting_video")
+        self.trans_botton["state"] = tk.DISABLED
+        self.clear_log()
+        
         param = self.get_output_param()
-        cmd_resize = 'ffmpeg -i "%s" -vf scale=%s:%s "%s"'  # 缩放转化
-        # cmd_to_rgb 的倒数第二个参数其实没什么作用，因为rgb本身就是实际的像素点
-        # （这个是为了跟cmd_to_mjpeg统一格式才加的参数）
-        cmd_to_rgb = 'ffmpeg -i "%s" -vf "fps=%s,scale=-1:%s:flags=lanczos,crop=%s:in_h:(in_w-%s)/2:0" -c:v rawvideo -pix_fmt rgb565be -q:v %s "%s"'
-        cmd_to_mjpeg = 'ffmpeg -i "%s" -vf "fps=%s,scale=-1:%s:flags=lanczos,crop=%s:in_h:(in_w-%s)/2:0" -q:v %s "%s"'
+        
+        # Validate input
+        if not param["src_path"]:
+            self.log("✗ Error: Please select a source video file!")
+            self.trans_botton["text"] = self.i18n.t("start_conversion")
+            self.trans_botton["state"] = tk.NORMAL
+            return
+        
+        if not os.path.exists(param["src_path"]):
+            self.log(f"✗ Error: Source file does not exist: {param['src_path']}")
+            self.trans_botton["text"] = self.i18n.t("start_conversion")
+            self.trans_botton["state"] = tk.NORMAL
+            return
+        
+        self.log(f"Starting video conversion...")
+        self.log(f"Source: {os.path.basename(param['src_path'])}")
+        self.log(f"Resolution: {param['width']}x{param['height']}")
+        self.log(f"FPS: {param['fps']}")
+        self.log(f"Quality: {param['quality']}")
+        self.log(f"Format: {param['format']}")
+        
+        cmd_resize = 'ffmpeg -y -i "%s" -vf scale=%s:%s "%s"'  # 缩放转化
+        cmd_to_rgb = 'ffmpeg -y -i "%s" -vf "fps=%s,scale=-1:%s:flags=lanczos,crop=%s:in_h:(in_w-%s)/2:0" -c:v rawvideo -pix_fmt rgb565be -q:v %s "%s"'
+        cmd_to_mjpeg = 'ffmpeg -y -i "%s" -vf "fps=%s,scale=-1:%s:flags=lanczos,crop=%s:in_h:(in_w-%s)/2:0" -q:v %s "%s"'
 
         name_suffix = os.path.basename(param["src_path"]).split(".")
         suffix = name_suffix[-1]  # 后缀名
-        # 生成的中间文件名
         video_cache_name = name_suffix[0] + "_" + param["width"] + "x" + param["height"] + "_cache." + suffix
-        # 带上路径
         video_cache = os.path.join(cur_dir, ROOT_PATH, CACHE_PATH, video_cache_name)
-        # 最终输出的文件
+        
         if param["format"] == 'rgb565be':
             out_format_tail = ".rgb"
-            trans_cmd = cmd_to_rgb  # 最后的转换命令
+            trans_cmd = cmd_to_rgb
         elif param["format"] == 'MJPEG':
             out_format_tail = ".mjpeg"
-            trans_cmd = cmd_to_mjpeg  # 最后的转换命令
+            trans_cmd = cmd_to_mjpeg
         else:
             out_format_tail = ".mjpeg"
-            trans_cmd = cmd_to_mjpeg  # 最后的转换命令
+            trans_cmd = cmd_to_mjpeg
+            
         final_out = os.path.join(param["dst_path"],
                                  name_suffix[0] + "_" + param["width"] + "x" + param["height"] + out_format_tail)
 
-        # 清理之前的记录
+        # Clean up previous files
         try:
-            os.remove(video_cache)
-            os.remove(final_out)
+            if os.path.exists(video_cache):
+                os.remove(video_cache)
+            if os.path.exists(final_out):
+                os.remove(final_out)
         except Exception as err:
-            pass
+            self.log(f"Warning: Failed to remove old files: {err}")
 
-        middle_cmd = cmd_resize % (param["src_path"], param["width"],
-                                   param["height"], video_cache)
-        print(middle_cmd)
+        # Step 1: Resize
+        middle_cmd = cmd_resize % (param["src_path"], param["width"], param["height"], video_cache)
+        if not self.run_ffmpeg_command(middle_cmd, "Step 1: Resizing video"):
+            self.log("\n✗ Conversion failed at resize step!")
+            self.trans_botton["text"] = self.i18n.t("start_conversion")
+            self.trans_botton["state"] = tk.NORMAL
+            return
+
+        # Step 2: Convert format
         out_cmd = trans_cmd % (video_cache, param["fps"], param["height"],
                                param["width"], param["width"], param["quality"], final_out)
-        print(out_cmd)
-        os.system(middle_cmd)
-        os.system(out_cmd)
-        # os.remove(video_cache)        
+        if not self.run_ffmpeg_command(out_cmd, f"Step 2: Converting to {param['format']}"):
+            self.log("\n✗ Conversion failed at format conversion step!")
+            self.trans_botton["text"] = self.i18n.t("start_conversion")
+            self.trans_botton["state"] = tk.NORMAL
+            return
+
+        # Clean up cache file
+        try:
+            if os.path.exists(video_cache):
+                os.remove(video_cache)
+                self.log(f"Cleaned up cache file: {os.path.basename(video_cache)}")
+        except Exception as err:
+            self.log(f"Warning: Failed to remove cache file: {err}")
+
+        self.log("\n" + "="*60)
+        self.log("✓ CONVERSION COMPLETED SUCCESSFULLY!")
+        self.log(f"Output file: {final_out}")
+        self.log("="*60)
+        
         self.trans_botton["text"] = self.i18n.t("start_conversion")
+        self.trans_botton["state"] = tk.NORMAL
 
     def init_options(self, father):
         """
