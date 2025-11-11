@@ -6,46 +6,69 @@ Holocubic_AIO开源地址 https://github.com/ClimbSnail/HoloCubic_AIO
 
 ![AIO_TOOL](https://gitee.com/ClimbSnailQ/Project_Image/raw/master/OtherProject/holocubic_aio_tool.png)
 
-## 环境配置
+## 快速开始
 
-### 使用 uv 设置虚拟环境（推荐）
+### 前置要求
+- [uv](https://github.com/astral-sh/uv) - 快速的 Python 包管理器（推荐）
 
-[uv](https://github.com/astral-sh/uv) is a fast Python package installer and resolver.
+### 一键安装（推荐）
+
+使用自动化脚本快速设置环境：
 
 ```bash
-# Install uv (if not already installed)
+# Windows PowerShell
+.\setup.ps1
+```
+
+### 手动安装
+
+#### 方法 1: 使用 uv（推荐）
+
+```bash
+# 1. 安装 uv (如果尚未安装)
 # Windows (PowerShell)
 powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 
 # macOS/Linux
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Create and activate virtual environment
+# 2. 创建虚拟环境
 uv venv
-# Windows
-.venv\Scripts\activate
-# macOS/Linux
-source .venv/bin/activate
 
-# Install dependencies
+# 3. 安装所有依赖（包括本地的 esptool）
 uv pip install -r requirements.txt
+
+# 4. 运行应用
+uv run python CubicAIO_Tool.py
 ```
 
-### 传统方式
+#### 方法 2: 传统方式
 
 ```bash
-# Create virtual environment
+# 1. 创建虚拟环境
 python -m venv venv
 
-# Activate virtual environment
+# 2. 激活虚拟环境
 # Windows
 venv\Scripts\activate
 # macOS/Linux
 source venv/bin/activate
 
-# Install dependencies
+# 3. 安装所有依赖（包括本地的 esptool）
 pip install -r requirements.txt
+
+# 4. 运行应用
+python CubicAIO_Tool.py
 ```
+
+### 依赖说明
+
+本项目的 `requirements.txt` 包含：
+- **运行时依赖**: pillow, requests, pyserial
+- **esptool v4.1**: 从本地 `esptool_v41/` 目录安装
+- **构建工具**: pyinstaller（用于打包可执行文件）
+
+所有 esptool 的依赖（bitstring, cryptography, ecdsa, reedsolo）会自动安装。
 
 ## 重要问题
 本工程包含了上位机所有代码及资源文件，但唯独缺少视频转化工具`ffmpeg`（文件太大），需要转化功能的可以自行访问`ffmpeg`原项目地址 https://github.com/FFmpeg/FFmpeg 下载，把其中的`ffmpeg.exe`文件放在本工程的根目录下即可。
@@ -62,22 +85,31 @@ brew install ffmpeg
 sudo apt install ffmpeg
 ```
 
-### 打包成可执行程序
+## 打包成可执行程序
 
-#### 使用 uv（推荐）
+### 使用 spec 文件（推荐）
+
+本项目包含优化的 `CubicAIO_Tool.spec` 文件，可以正确打包所有依赖（包括 esptool）：
+
 ```bash
-# 确保已激活虚拟环境
-.venv\Scripts\activate  # Windows
-# source .venv/bin/activate  # macOS/Linux
+# 使用 uv（推荐）
+uv run pyinstaller CubicAIO_Tool.spec
 
-# 使用 uv 运行 pyinstaller
-uv run pyinstaller --icon ./image/holo_256.ico -w -F CubicAIO_Tool.py
+# 或清理后重新构建
+uv run pyinstaller --clean CubicAIO_Tool.spec
 ```
 
-#### 传统方式
+### 快速打包（不推荐）
+
 ```bash
+# 使用 uv
+uv run pyinstaller --icon ./image/holo_256.ico -w -F CubicAIO_Tool.py
+
+# 传统方式
 pyinstaller --icon ./image/holo_256.ico -w -F CubicAIO_Tool.py
 ```
+
+**⚠️ 注意**: 快速打包可能无法正确包含 esptool 模块，建议使用 `.spec` 文件。
 
 **参数说明：**
 - `--icon ./image/holo_256.ico` - 设置应用程序图标
@@ -85,6 +117,34 @@ pyinstaller --icon ./image/holo_256.ico -w -F CubicAIO_Tool.py
 - `-F` - 打包成单个可执行文件
 
 **输出位置：** `dist/CubicAIO_Tool.exe`
+
+## 故障排除
+
+### "No module named 'esptool'" 错误
+
+如果遇到此错误：
+
+1. **检查 esptool 是否已安装**:
+   ```bash
+   uv pip list | findstr esptool  # Windows
+   uv pip list | grep esptool     # macOS/Linux
+   ```
+
+2. **重新安装所有依赖**:
+   ```bash
+   uv pip install --force-reinstall -r requirements.txt
+   ```
+
+3. **重新构建可执行文件**:
+   ```bash
+   uv run pyinstaller --clean CubicAIO_Tool.spec
+   ```
+
+### 其他常见问题
+
+- **虚拟环境激活失败**: 确保使用正确的激活命令（见上方安装说明）
+- **依赖安装失败**: 尝试升级 pip/uv 到最新版本
+- **打包失败**: 确保所有依赖都已正确安装
 
 ## 开发笔记
 
@@ -115,6 +175,27 @@ pyinstaller --icon ./image/holo_256.ico -w -F CubicAIO_Tool.py
 https://lvgl.io/assets/images/logo_lvgl.png
 
 利用lvgl的官方转换器 https://lvgl.io/tools/imageconverter 图片则可以转换成（True color with alpha 选择Binary RGB565）bin文件存储到SD卡中
+
+## 项目结构
+
+```
+AIO_Tool/
+├── CubicAIO_Tool.py          # 主程序入口
+├── CubicAIO_Tool.spec         # PyInstaller 配置文件（包含 esptool 配置）
+├── requirements.txt           # Python 依赖列表（包括本地 esptool）
+├── setup.ps1                  # Windows 自动化安装脚本
+├── esptool_v41/              # 本地 esptool v4.1 包
+├── page/                      # UI 页面模块
+│   ├── download_debug.py     # 下载调试页面（使用 esptool）
+│   ├── videotool.py          # 视频工具
+│   ├── images_converter.py   # 图片转换器
+│   └── ...
+├── util/                      # 工具模块
+├── image/                     # 图标资源
+├── base_bin/                  # 基础固件文件
+└── dist/                      # 构建输出目录
+    └── CubicAIO_Tool.exe     # 最终可执行文件
+```
 
 ## 致谢
 * 固件下载工具 https://github.com/espressif/esptool

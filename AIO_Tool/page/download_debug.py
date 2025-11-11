@@ -31,7 +31,7 @@ import sys
 # else:
 #     sys.path.append("./")
 # import esptool # sys.path.append("./esptool_v41") or pip install esptool==4.1 
-from esptool_v41 import esptool
+import esptool
 
 STRGLO = ""  # 读取的数据
 BOOL = True  # 读取标志位

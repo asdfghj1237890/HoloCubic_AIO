@@ -1,13 +1,12 @@
-# Runtime deps
+# Runtime dependencies
 pillow
 requests
 pyserial
 
-# esptool bundle deps (used by AIO_Tool/esptool_v41)
-reedsolo
-ecdsa
-cryptography
+# esptool (local directory)
+# Install esptool from local esptool_v41 directory
+./esptool_v41
 
-# Build tool
+# Build tool (for development)
 pyinstaller
 
