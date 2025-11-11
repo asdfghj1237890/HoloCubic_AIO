@@ -50,9 +50,41 @@ pip install -r requirements.txt
 ## 重要问题
 本工程包含了上位机所有代码及资源文件，但唯独缺少视频转化工具`ffmpeg`（文件太大），需要转化功能的可以自行访问`ffmpeg`原项目地址 https://github.com/FFmpeg/FFmpeg 下载，把其中的`ffmpeg.exe`文件放在本工程的根目录下即可。
 
+或者使用包管理器安装（推荐）：
+```bash
+# Windows (Chocolatey)
+choco install ffmpeg -y
+
+# macOS (Homebrew)
+brew install ffmpeg
+
+# Linux (Ubuntu/Debian)
+sudo apt install ffmpeg
+```
 
 ### 打包成可执行程序
-使用pyinstaller打包程序`pyinstaller --icon ./image/holo_256.ico -w -F CubicAIO_Tool.py`
+
+#### 使用 uv（推荐）
+```bash
+# 确保已激活虚拟环境
+.venv\Scripts\activate  # Windows
+# source .venv/bin/activate  # macOS/Linux
+
+# 使用 uv 运行 pyinstaller
+uv run pyinstaller --icon ./image/holo_256.ico -w -F CubicAIO_Tool.py
+```
+
+#### 传统方式
+```bash
+pyinstaller --icon ./image/holo_256.ico -w -F CubicAIO_Tool.py
+```
+
+**参数说明：**
+- `--icon ./image/holo_256.ico` - 设置应用程序图标
+- `-w` - 不显示控制台窗口（仅GUI）
+- `-F` - 打包成单个可执行文件
+
+**输出位置：** `dist/CubicAIO_Tool.exe`
 
 ## 开发笔记
 
