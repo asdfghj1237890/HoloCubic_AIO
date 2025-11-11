@@ -48,7 +48,7 @@ public:
     virtual ~MjpegPlayDecoder();
     uint32_t readJpegFromFile(File *file, uint8_t *buf, int32_t &bufSaveTail);
     uint32_t readJpegFromFile(File *file);
-    bool static tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap);
+    static bool tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap);
     virtual bool video_start();
     virtual bool video_play_screen();
     virtual bool video_end();

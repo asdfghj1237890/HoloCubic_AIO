@@ -123,17 +123,37 @@ void display_stockmarket_init(void)
     lv_label_set_recolor(CloseQuo, true);
 
     // Draw layout
+    // Stock name label - positioned at top left corner
     lv_obj_align(NameLabel, LV_ALIGN_TOP_LEFT, 0, 0);
+    
+    // Upper separator line - positioned at left side, vertically centered with -90px offset
     lv_obj_align(uplineLabel, LV_ALIGN_LEFT_MID, 0, -90);
+    
+    // Current stock price - positioned below the upper separator line, aligned to left
     lv_obj_align_to(nowQuoLabel, uplineLabel, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0);
-    lv_obj_align_to(ArrowImg, nowQuoLabel, LV_ALIGN_OUT_RIGHT_MID, 100, 0);
-    lv_obj_align_to(ChgValueLabel, ArrowImg, LV_ALIGN_OUT_RIGHT_BOTTOM, 30, 10);
-    lv_obj_align_to(ChgPercentLabel, ArrowImg, LV_ALIGN_OUT_RIGHT_TOP, 30, 20);
+    
+    // Up/down arrow icon - positioned at 150px from left, -52px vertical offset from center
+    lv_obj_align(ArrowImg, LV_ALIGN_LEFT_MID, 150, -52);
+    
+    // Change value (absolute price change) - positioned to the right bottom of arrow, offset +36px horizontally, -4px vertically
+    lv_obj_align_to(ChgValueLabel, ArrowImg, LV_ALIGN_OUT_RIGHT_BOTTOM, 36, -4);
+    
+    // Change percentage - positioned to the right top of arrow, offset +34px horizontally, no vertical offset
+    lv_obj_align_to(ChgPercentLabel, ArrowImg, LV_ALIGN_OUT_RIGHT_TOP, 34, 0);
+    
+    // Lower separator line - positioned 60px below upper separator, horizontally centered
     lv_obj_align_to(lineLabel2, uplineLabel, LV_ALIGN_BOTTOM_MID, 0, 60);
 
+    // Open price and High price - positioned below the lower separator line, aligned to left
     lv_obj_align_to(OpenQuo, lineLabel2, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0);
+    
+    // Previous close and Low price - positioned below the Open/High label
     lv_obj_align_to(MaxQuo, OpenQuo, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0);
+    
+    // Trading volume - positioned below the Prev/Low label
     lv_obj_align_to(MinQuo, MaxQuo, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0);
+    
+    // Turnover (trading value) - positioned below the Volume label
     lv_obj_align_to(CloseQuo, MinQuo, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0);
 
     lv_scr_load(stockmarket_gui);

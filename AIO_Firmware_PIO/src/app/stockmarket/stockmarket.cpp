@@ -282,9 +282,32 @@ static bool parse_yahoo_data(String payload)
         strncpy(run_data->stockdata.name, symbol, 12);
     }
     
-    // Get current price
-    float currentPrice = chart["meta"]["regularMarketPrice"];
-    float previousClose = chart["meta"]["previousClose"];
+    // Get current price - try multiple possible field names
+    JsonObject meta = chart["meta"];
+    float currentPrice = 0;
+    float previousClose = 0;
+    
+    // Try different field names for current price
+    if (meta.containsKey("regularMarketPrice")) {
+        currentPrice = meta["regularMarketPrice"];
+        Serial.printf("[DEBUG] Found regularMarketPrice: %.2f\n", currentPrice);
+    }
+    
+    // Try different field names for previous close
+    if (meta.containsKey("previousClose")) {
+        previousClose = meta["previousClose"];
+        Serial.printf("[DEBUG] Found previousClose: %.2f\n", previousClose);
+    } else if (meta.containsKey("chartPreviousClose")) {
+        previousClose = meta["chartPreviousClose"];
+        Serial.printf("[DEBUG] Found chartPreviousClose: %.2f\n", previousClose);
+    } else {
+        Serial.println("[DEBUG] previousClose field not found in meta!");
+        // Print available meta fields for debugging
+        Serial.println("[DEBUG] Available meta fields:");
+        for (JsonPair kv : meta) {
+            Serial.printf("  - %s\n", kv.key().c_str());
+        }
+    }
     
     // Get OHLC data from quotes
     JsonArray high = chart["indicators"]["quote"][0]["high"];
@@ -344,7 +367,16 @@ static bool parse_yahoo_data(String payload)
         }
     }
     
-    run_data->stockdata.turnover = 0; // Yahoo doesn't provide turnover directly
+    // Calculate turnover: approximate as current price * volume
+    // Yahoo Finance doesn't provide turnover directly, so we estimate it
+    if (run_data->stockdata.tradvolume > 0 && currentPrice > 0) {
+        run_data->stockdata.turnover = currentPrice * run_data->stockdata.tradvolume;
+        Serial.printf("[DEBUG] Calculated turnover: %.2f (price: %.2f × volume: %.0f)\n", 
+            run_data->stockdata.turnover, currentPrice, run_data->stockdata.tradvolume);
+    } else {
+        run_data->stockdata.turnover = 0;
+        Serial.println("[DEBUG] Turnover set to 0 (insufficient data)");
+    }
     
     return true;
 }
@@ -388,6 +420,13 @@ static void update_stock_data()
             run_data->stockdata.ChgPercent = (run_data->stockdata.CloseQuo != 0) 
                 ? (run_data->stockdata.ChgValue / run_data->stockdata.CloseQuo * 100) 
                 : 0;
+            
+            // Debug calculation
+            Serial.printf("[DEBUG] ChgValue: %.2f = %.2f - %.2f\n", 
+                run_data->stockdata.ChgValue,
+                run_data->stockdata.NowQuo,
+                run_data->stockdata.CloseQuo);
+            Serial.printf("[DEBUG] ChgPercent: %.2f%%\n", run_data->stockdata.ChgPercent);
             
             // Set stock code
             memset(run_data->stockdata.code, '\0', 9);
