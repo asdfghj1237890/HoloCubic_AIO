@@ -1,0 +1,98 @@
+name: Release Firmware and Tool
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  build_firmware:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1
+
+      - name: Build firmware
+        working-directory: AIO_Firmware_PIO
+        run: uvx platformio run --environment HoloCubic_AIO_Releases
+
+      - name: Package firmware artifact
+        run: |
+          mkdir -p release
+          cp AIO_Firmware_PIO/.pio/build/HoloCubic_AIO_Releases/firmware.bin release/HoloCubic_AIO_firmware_${{ github.ref_name }}.bin
+
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: release/HoloCubic_AIO_firmware_${{ github.ref_name }}.bin
+          if-no-files-found: error
+
+  build_tool:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1
+
+      - name: Prepare Python environment
+        working-directory: AIO_Tool
+        shell: pwsh
+        run: |
+          uv venv
+          uv run pip install -r requirements.txt
+
+      - name: Build executable
+        working-directory: AIO_Tool
+        shell: pwsh
+        run: uv run pyinstaller CubicAIO_Tool.spec
+
+      - name: Package tool artifact
+        shell: pwsh
+        run: |
+          $artifactDir = "release"
+          New-Item -ItemType Directory -Force -Path $artifactDir | Out-Null
+          Copy-Item -Path "AIO_Tool\dist\CubicAIO_Tool.exe" -Destination (Join-Path $artifactDir ("HoloCubic_AIO_Tool_${{ github.ref_name }}.exe")) -Force
+
+      - name: Upload tool artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tool
+          path: release/HoloCubic_AIO_Tool_${{ github.ref_name }}.exe
+          if-no-files-found: error
+
+  publish_release:
+    runs-on: ubuntu-latest
+    needs:
+      - build_firmware
+      - build_tool
+    steps:
+      - name: Download firmware artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: firmware
+          path: release
+
+      - name: Download tool artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tool
+          path: release
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: HoloCubic AIO ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          files: |
+            release/HoloCubic_AIO_firmware_${{ github.ref_name }}.bin
+            release/HoloCubic_AIO_Tool_${{ github.ref_name }}.exe
+
