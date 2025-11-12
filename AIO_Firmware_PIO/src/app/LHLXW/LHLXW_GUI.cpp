@@ -1,6 +1,6 @@
 #include "LHLXW_GUI.h"
 #include "LHLXW_StartAnim.h"
-#include "arduino.h"
+#include "Arduino.h"
 
 LV_FONT_DECLARE(APP_OPTION_ico);//定义选项字符
 

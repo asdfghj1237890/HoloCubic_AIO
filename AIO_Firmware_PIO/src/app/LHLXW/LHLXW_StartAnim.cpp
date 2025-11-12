@@ -1,5 +1,5 @@
 #include "LHLXW_StartAnim.h"
-#include "arduino.h"
+#include "Arduino.h"
 
 #define LCD_W 240
 #define LCD_H 240

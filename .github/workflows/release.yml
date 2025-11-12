@@ -79,7 +79,13 @@ jobs:
       - name: Build executable
         working-directory: AIO_Tool
         shell: pwsh
-        run: uv run pyinstaller CubicAIO_Tool.spec
+        run: |
+          $spec = Join-Path $PWD "CubicAIO_Tool.spec"
+          if (-not (Test-Path $spec)) {
+            Get-ChildItem
+            throw "Spec file not found at $spec"
+          }
+          uv run pyinstaller $spec
 
       - name: Package tool artifact
         shell: pwsh
