@@ -69,7 +69,7 @@ static B_Config cfg_data;
 static StockmarketAppRunData *run_data = NULL;
 
 // Build stock symbol based on market type
-static String buildStockSymbol(String symbol, String market)
+static String buildStockSymbol(const String& symbol, const String& market)
 {
     if (market == "CN")
     {
@@ -94,7 +94,7 @@ static String buildStockSymbol(String symbol, String market)
     return symbol;
 }
 
-static MyHttpResult http_request(String symbol, String market)
+static MyHttpResult http_request(const String& symbol, const String& market)
 {
     MyHttpResult result;
     String url;
@@ -215,7 +215,7 @@ static int stockmarket_exit_callback(void *param)
 }
 
 // Parse Chinese market data from Sina Finance API
-static bool parse_sina_data(String payload)
+static bool parse_sina_data(const String& payload)
 {
     Serial.println("[HTTP] Parsing Sina Finance data");
     int startIndex_1 = payload.indexOf(',') + 1;
@@ -254,10 +254,12 @@ static bool parse_sina_data(String payload)
 }
 
 // Parse international market data from Yahoo Finance API
-static bool parse_yahoo_data(String payload)
+static bool parse_yahoo_data(const String& payload)
 {
     Serial.println("[HTTP] Parsing Yahoo Finance data");
+    
     DynamicJsonDocument doc(4096);
+    
     DeserializationError error = deserializeJson(doc, payload);
     
     if (error)
@@ -370,7 +372,10 @@ static bool parse_yahoo_data(String payload)
 
 static void update_stock_data()
 {
+    Serial.printf("[MEM] Free heap: %d bytes\n", ESP.getFreeHeap());
+    
     MyHttpResult result = http_request(cfg_data.stock_symbol, cfg_data.market_type);
+    
     if (-1 == result.httpCode)
     {
         Serial.println("[HTTP] Http request failed.");
@@ -381,7 +386,6 @@ static void update_stock_data()
     {
         if (result.httpCode == HTTP_CODE_OK || result.httpCode == HTTP_CODE_MOVED_PERMANENTLY)
         {
-            String payload = result.httpResponse;
             Serial.println("[HTTP] OK");
             
             bool parseSuccess = false;
@@ -389,11 +393,11 @@ static void update_stock_data()
             // Parse based on market type
             if (cfg_data.market_type == "CN")
             {
-                parseSuccess = parse_sina_data(payload);
+                parseSuccess = parse_sina_data(result.httpResponse);
             }
             else
             {
-                parseSuccess = parse_yahoo_data(payload);
+                parseSuccess = parse_yahoo_data(result.httpResponse);
             }
             
             if (!parseSuccess)

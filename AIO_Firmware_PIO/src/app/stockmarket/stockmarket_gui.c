@@ -73,12 +73,15 @@ void stockmarket_gui_init(void)
 
 void display_stockmarket_init(void)
 {
-    lv_obj_t *act_obj = lv_scr_act(); // 获取当前活动页
-    if (act_obj == stockmarket_gui)
+    lv_obj_t *act_obj = lv_scr_act();
+    
+    if (stockmarket_gui != NULL)
+    {
         return;
+    }
 
-    stockmarket_gui_del(); // 清空对象
-    lv_obj_clean(act_obj); // 清空此前页面
+    stockmarket_gui_del();
+    lv_obj_clean(act_obj);
 
     stockmarket_gui = lv_obj_create(NULL);
     lv_obj_add_style(stockmarket_gui, &default_style, LV_STATE_DEFAULT);
@@ -165,7 +168,10 @@ void display_stockmarket_init(void)
 
 void display_stockmarket(struct StockMarket stockInfo, lv_scr_load_anim_t anim_type)
 {
-    display_stockmarket_init();
+    if (stockmarket_gui == NULL)
+    {
+        display_stockmarket_init();
+    }
 
     // Stock name/symbol
     lv_label_set_text_fmt(NameLabel, "Stock: %s", stockInfo.name);
@@ -173,27 +179,33 @@ void display_stockmarket(struct StockMarket stockInfo, lv_scr_load_anim_t anim_t
     if (stockInfo.updownflag == 0) // Stock price down (Taiwan style: RED for down)
     {
         // Current price - RED for down
-        lv_obj_add_style(nowQuoLabel, &numberBigRed_style, LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(nowQuoLabel, lv_color_hex(0xff0000), LV_PART_MAIN);
+        lv_obj_set_style_text_font(nowQuoLabel, &lv_font_montserrat_48, LV_PART_MAIN);
         lv_label_set_text_fmt(nowQuoLabel, "%.2f", stockInfo.NowQuo);
         // Arrow
         lv_img_set_src(ArrowImg, &down);
         // Change value and percentage - RED for down
-        lv_obj_add_style(ChgValueLabel, &numberLittleRed_style, LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ChgValueLabel, lv_color_hex(0xff0000), LV_PART_MAIN);
+        lv_obj_set_style_text_font(ChgValueLabel, &lv_font_montserrat_20, LV_PART_MAIN);
         lv_label_set_text_fmt(ChgValueLabel, "%.2f", stockInfo.ChgValue);
-        lv_obj_add_style(ChgPercentLabel, &numberLittleRed_style, LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ChgPercentLabel, lv_color_hex(0xff0000), LV_PART_MAIN);
+        lv_obj_set_style_text_font(ChgPercentLabel, &lv_font_montserrat_20, LV_PART_MAIN);
         lv_label_set_text_fmt(ChgPercentLabel, "%.2f%%", stockInfo.ChgPercent);
     }
     else // Stock price up (Taiwan style: GREEN for up)
     {
         // Current price - GREEN for up
-        lv_obj_add_style(nowQuoLabel, &numberBigGreen_style, LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(nowQuoLabel, lv_color_hex(0x00ff00), LV_PART_MAIN);
+        lv_obj_set_style_text_font(nowQuoLabel, &lv_font_montserrat_48, LV_PART_MAIN);
         lv_label_set_text_fmt(nowQuoLabel, "%.2f", stockInfo.NowQuo);
         // Arrow
         lv_img_set_src(ArrowImg, &up);
         // Change value and percentage - GREEN for up
-        lv_obj_add_style(ChgValueLabel, &numberLittleGreen_style, LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ChgValueLabel, lv_color_hex(0x00ff00), LV_PART_MAIN);
+        lv_obj_set_style_text_font(ChgValueLabel, &lv_font_montserrat_20, LV_PART_MAIN);
         lv_label_set_text_fmt(ChgValueLabel, "%.2f", stockInfo.ChgValue);
-        lv_obj_add_style(ChgPercentLabel, &numberLittleGreen_style, LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ChgPercentLabel, lv_color_hex(0x00ff00), LV_PART_MAIN);
+        lv_obj_set_style_text_font(ChgPercentLabel, &lv_font_montserrat_20, LV_PART_MAIN);
         lv_label_set_text_fmt(ChgPercentLabel, "%.2f%%", stockInfo.ChgPercent);
     }
 
@@ -215,7 +227,7 @@ void stockmarket_gui_del(void)
 {
     if (NULL != stockmarket_gui)
     {
-        lv_obj_clean(stockmarket_gui);
+        lv_obj_del(stockmarket_gui);
         stockmarket_gui = NULL;
         nowQuoLabel = NULL;
         ChgValueLabel = NULL;
@@ -229,13 +241,4 @@ void stockmarket_gui_del(void)
         MinQuo = NULL;
         CloseQuo = NULL;
     }
-
-    // 手动清除样式，防止内存泄漏
-    // lv_style_reset(&default_style);
-    // lv_style_reset(&numberBigRed_style);
-    // lv_style_reset(&numberBigGreen_style);
-    // lv_style_reset(&numberLittleGreen_style);
-    // lv_style_reset(&numberLittleRed_style);
-    // lv_style_reset(&chFont_style);
-    // lv_style_reset(&splitline_style);
 }
