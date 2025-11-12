@@ -1,5 +1,5 @@
 #include "lvgl.h"
-#include "EMOJI.h"
+#include "emoji.h"
 #include "../LHLXW_StartAnim.h"
 #include "stdlib.h"
 #include "sys/app_controller.h"
