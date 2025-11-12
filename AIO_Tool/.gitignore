@@ -5,4 +5,3 @@ build/
 dist/
 .idea/
 __pycache__/
-CubicAIO_Tool.spec
