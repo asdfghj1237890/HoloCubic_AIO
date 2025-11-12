@@ -76,5 +76,5 @@ def _async_raise(thread_obj):
             # and you should call it again with exc=NULL to revert the effect"""
             ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
             raise SystemError("PyThreadState_SetAsyncExc failed")
-    except Exception as err:
-        print(err)
+    except Exception:
+        pass

@@ -58,6 +58,7 @@ class DownloadDebug(object):
         self.download_thread = None
         self.progress_bar_thread = None
         self.clean_flash_thread = None
+        self._progress_stop_event = threading.Event()
         self.i18n = get_i18n()
 
         # Serial settings section
@@ -118,14 +119,23 @@ class DownloadDebug(object):
             self.com_connect()
 
     def display_version(self):
-        self.m_version_info["state"] = tk.DISABLED
+        def update_ui(version_text):
+            self.m_version_info["state"] = tk.DISABLED
+            self.m_version_var.set(version_text)
+
+        version_text = self.i18n.t("unknown")
         try:
             response = requests.get(VERSION_INFO_URL, timeout=3) # , verify=False
             version_info = re.findall(r'AIO_VERSION v\d{1,2}\.\d{1,2}\.\d{1,2}', response.text)
-            self.m_version_var.set(version_info[0].split(" ")[1])
+            if version_info:
+                version_text = version_info[0].split(" ")[1]
         except Exception as err:
             print(err)
-            self.m_version_var.set(self.i18n.t("unknown"))
+
+        if threading.current_thread() is threading.main_thread():
+            update_ui(version_text)
+        else:
+            self.__father.after(0, lambda: update_ui(version_text))
 
     def init_firmware(self, father):
         """
@@ -233,18 +243,31 @@ class DownloadDebug(object):
         self.progress_bar.pack(side=tk.TOP, pady=0)
         progress_frame.pack(side=tk.TOP, pady=0)
 
+    def _stop_progress_thread(self, wait=True):
+        if self.progress_bar_thread is not None:
+            self._progress_stop_event.set()
+            if wait and self.progress_bar_thread.is_alive():
+                try:
+                    self.progress_bar_thread.join(timeout=1)
+                except Exception:
+                    pass
+            self.progress_bar_thread = None
+
     def schedule_display(self, all_time, update_interval):
         """
         进度条处理动画，原则上启动一个线程来执行本函数
         all_time：进度条的总时间(s)
         update_interval：更新时间间隔(s)
         """
-        cycle_number = int(all_time / update_interval)
+        cycle_number = max(1, int(all_time / update_interval))
         self.print_log("all_time: " + str(all_time))
         for num in range(cycle_number - 1):
+            if self._progress_stop_event.is_set():
+                break
             self.progress_bar.coords(self.progress_bar_fill, (3, 3, (num / cycle_number) * 440, 14))
             self.__father.update()
-            time.sleep(update_interval)
+            if self._progress_stop_event.wait(update_interval):
+                break
 
     def choose_file(self, num):
         """
@@ -323,10 +346,12 @@ class DownloadDebug(object):
         if self.download_thread != None:
             try:
                 # 杀线程
-                common._async_raise(self.download_thread)
-                self.download_thread = None
+                if self.download_thread.is_alive():
+                    common._async_raise(self.download_thread)
             except Exception as err:
                 print(err)
+            finally:
+                self.download_thread = None
 
         self.m_download_botton["text"] = self.i18n.t("flash_firmware")
         self.m_connect_button["state"] = tk.NORMAL
@@ -335,12 +360,7 @@ class DownloadDebug(object):
         self.m_download_botton["state"] = tk.NORMAL
 
         if self.progress_bar_thread != None:
-            try:
-                # 杀线程
-                common._async_raise(self.progress_bar_thread)
-                self.progress_bar_thread = None
-            except Exception as err:
-                print(err)
+            self._stop_progress_thread()
 
         # 复位进度条
         self.progress_bar.coords(self.progress_bar_fill, (3, 3, 0, 25))
@@ -382,8 +402,10 @@ class DownloadDebug(object):
             except Exception as err:
                 print(err)
 
+        self._progress_stop_event.clear()
         self.progress_bar_thread = threading.Thread(target=self.schedule_display,
-                                                    args=(all_time, 0.1,))
+                                                    args=(all_time, 0.1,),
+                                                    daemon=True)
         # 进度条进程要在下载进程之前启动（为了在下载失败时可以立即查杀进度条进程）
         self.download_thread = threading.Thread(target=self.down_action,
                                                 args=(cmd,))
@@ -397,26 +419,33 @@ class DownloadDebug(object):
         self.print_log("-" * 15)
         self.__father.update()
 
-        ret = esptool.main(cmd)
+        flash_success = False
+        try:
+            esptool.main(cmd)
+            flash_success = True
+        except serial.SerialException as err:
+            print(err)
+            self.print_log(err)
+        except Exception as err:
+            print(err)
+            self.print_log(err)
+        finally:
+            self.m_download_botton["text"] = self.i18n.t("flash_firmware")
+            self.m_connect_button["state"] = tk.NORMAL
+            self.m_reboot_button["state"] = tk.NORMAL
+            self.m_clean_flash_botton["state"] = tk.NORMAL
+            self.m_download_botton["state"] = tk.NORMAL
 
-        self.m_download_botton["text"] = self.i18n.t("flash_firmware")
-        self.m_connect_button["state"] = tk.NORMAL
-        self.m_reboot_button["state"] = tk.NORMAL
-        self.m_clean_flash_botton["state"] = tk.NORMAL
-        self.m_download_botton["state"] = tk.NORMAL
+            if self.progress_bar_thread != None:
+                self._stop_progress_thread()
 
-        if self.progress_bar_thread != None:
-            try:
-                # 杀线程
-                common._async_raise(self.progress_bar_thread)
-                self.progress_bar_thread = None
-            except Exception as err:
-                print(err)
+            # 复位进度条
+            self.progress_bar.coords(self.progress_bar_fill, (3, 3, 0, 25))
 
-        # 复位进度条
-        self.progress_bar.coords(self.progress_bar_fill, (3, 3, 0, 25))
-
-        self.print_log(self.i18n.t("flash_success"))
+            if flash_success:
+                self.print_log(self.i18n.t("flash_success"))
+            else:
+                self.print_log("Flash firmware failed, please check the serial port.")
 
     def init_log(self, father):
         """
@@ -723,10 +752,11 @@ class DownloadDebug(object):
             self.ser = None
         if self.receive_thread != None:
             # 杀线程
-            common._async_raise(self.receive_thread)
+            if self.receive_thread.is_alive():
+                common._async_raise(self.receive_thread)
         if self.download_thread != None:
             # 杀线程
-            common._async_raise(self.download_thread)
+            if self.download_thread.is_alive():
+                common._async_raise(self.download_thread)
         if self.progress_bar_thread != None:
-            # 杀线程
-            common._async_raise(self.progress_bar_thread)
+            self._stop_progress_thread(wait=False)
