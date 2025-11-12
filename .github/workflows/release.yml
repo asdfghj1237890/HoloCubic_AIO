@@ -11,12 +11,24 @@ permissions:
 jobs:
   build_firmware:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.firmware_version.outputs.value }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install uv
         uses: astral-sh/setup-uv@v1
+
+      - name: Extract firmware version
+        id: firmware_version
+        run: |
+          version=$(grep -Po '(?<=#define AIO_VERSION ")[^"]+' AIO_Firmware_PIO/src/common.h)
+          if [ -z "$version" ]; then
+            echo "AIO_VERSION not found" >&2
+            exit 1
+          fi
+          echo "value=$version" >> $GITHUB_OUTPUT
 
       - name: Build firmware
         working-directory: AIO_Firmware_PIO
@@ -25,17 +37,19 @@ jobs:
       - name: Package firmware artifact
         run: |
           mkdir -p release
-          cp AIO_Firmware_PIO/.pio/build/HoloCubic_AIO_Releases/firmware.bin release/HoloCubic_AIO_firmware_${{ github.ref_name }}.bin
+          cp AIO_Firmware_PIO/.pio/build/HoloCubic_AIO_Releases/firmware.bin release/HoloCubic_AIO_firmware_${{ steps.firmware_version.outputs.value }}.bin
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
         with:
           name: firmware
-          path: release/HoloCubic_AIO_firmware_${{ github.ref_name }}.bin
+          path: release/HoloCubic_AIO_firmware_${{ steps.firmware_version.outputs.value }}.bin
           if-no-files-found: error
 
   build_tool:
     runs-on: windows-latest
+    outputs:
+      version: ${{ steps.tool_version.outputs.value }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,12 +57,24 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v1
 
+      - name: Extract tool version
+        id: tool_version
+        shell: pwsh
+        run: |
+          $match = Select-String -Path "AIO_Tool\util\common.py" -Pattern 'TOOL_VERSION\s*=\s*"([^"]+)"' -AllMatches
+          if (-not $match) {
+            Write-Error "TOOL_VERSION not found"
+            exit 1
+          }
+          $version = $match.Matches[0].Groups[1].Value
+          "value=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
       - name: Prepare Python environment
         working-directory: AIO_Tool
         shell: pwsh
         run: |
           uv venv
-          uv run pip install -r requirements.txt
+          uv pip install -r requirements.txt
 
       - name: Build executable
         working-directory: AIO_Tool
@@ -60,13 +86,14 @@ jobs:
         run: |
           $artifactDir = "release"
           New-Item -ItemType Directory -Force -Path $artifactDir | Out-Null
-          Copy-Item -Path "AIO_Tool\dist\CubicAIO_Tool.exe" -Destination (Join-Path $artifactDir ("HoloCubic_AIO_Tool_${{ github.ref_name }}.exe")) -Force
+          $toolVersion = "${{ steps.tool_version.outputs.value }}"
+          Copy-Item -Path "AIO_Tool\dist\CubicAIO_Tool.exe" -Destination (Join-Path $artifactDir ("HoloCubic_AIO_Tool_$toolVersion.exe")) -Force
 
       - name: Upload tool artifact
         uses: actions/upload-artifact@v4
         with:
           name: tool
-          path: release/HoloCubic_AIO_Tool_${{ github.ref_name }}.exe
+          path: release/HoloCubic_AIO_Tool_${{ steps.tool_version.outputs.value }}.exe
           if-no-files-found: error
 
   publish_release:
@@ -93,6 +120,6 @@ jobs:
           name: HoloCubic AIO ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
           files: |
-            release/HoloCubic_AIO_firmware_${{ github.ref_name }}.bin
-            release/HoloCubic_AIO_Tool_${{ github.ref_name }}.exe
+            release/HoloCubic_AIO_firmware_${{ needs.build_firmware.outputs.version }}.bin
+            release/HoloCubic_AIO_Tool_${{ needs.build_tool.outputs.version }}.exe
 
