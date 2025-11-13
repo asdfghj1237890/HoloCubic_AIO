@@ -286,11 +286,11 @@ class ImagesConverter(object):
                 self.log_message(f"Color format: {color_format}")
                 self.log_message(f"Output format: {output_format}")
                 if output_format == -1:
-                    out_obj = Converter(input_path, True, color_format)
+                    out_obj = Converter(input_path, True, color_format, cf_palette_bgr_en=1)
                     output_file = out_obj.get_c_code_file(outpath=ROOT_PATH)
                 else:
                     self.log_message(f"Input path: {input_path}")
-                    out_obj = Converter(input_path, True, output_format)
+                    out_obj = Converter(input_path, True, output_format, cf_palette_bgr_en=1)
                     output_file = out_obj.get_bin_file(outpath=ROOT_PATH)
             
             if output_file:
