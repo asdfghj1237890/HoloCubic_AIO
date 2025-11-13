@@ -3,10 +3,10 @@ Docs/LvglFontTool
 AIO_Firmware_PIO/src/app/app_conf.h
 AIO_Firmware_PIO/platformio.ini
 Docs/*
-放置到内存卡/movie/Hologram02.mjpeg
-放置到内存卡/Hologram 3D-minions.mp4
-放置到内存卡/Hologram 3D.mp4
-放置到内存卡/movie/Hologram01.mjpeg
-放置到内存卡/movie/Hologram 3D-minions_240x240.mjpeg
-放置到内存卡/Hologram01.mp4
-放置到内存卡/movie/Hologram01_240x240.mjpeg
+ SD_Card/movie/Hologram02.mjpeg
+ SD_Card/Hologram 3D-minions.mp4
+ SD_Card/Hologram 3D.mp4
+ SD_Card/movie/Hologram01.mjpeg
+ SD_Card/movie/Hologram 3D-minions_240x240.mjpeg
+ SD_Card/Hologram01.mp4
+ SD_Card/movie/Hologram01_240x240.mjpeg

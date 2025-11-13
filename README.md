@@ -1,209 +1,366 @@
 # HoloCubic_AIO (All in one for HoloCubic)
-### _You can also read a translated version of this file [in English 英文版](https://github.com/ClimbSnail/HoloCubic_AIO/blob/main/README_English.md) or [in Korean 한국어](./README_English.md)._
 
-`Holocubic`原为`稚晖君`大佬的开源项目，本项目则是运行在`HoloCubic硬件`之上的第三方独立固件项目。
+> 🌍 _您也可以阅读本文件的其他语言版本 [简体中文 Simplified Chinese](./README_zh-CN.md)_
 
-AIO意为All in one，目的将尽可能多的功能集成进Holocubic AIO固件中，并坚持开源。目前固件源码达`2w+`行，上位机源码`4k`行（均不含字库图片），诚邀大家共同开发AIO固件、上位机以及周边，让固件满足更多人的需求。
+![HomePage](Image/Holo1.jpg)
 
-此外，本固件代码完全开源，共大家学习、把玩，若使用本项目二次开源或部分参考，请适当注明参考来源。
+## 📖 Project Introduction
 
-* 原作者的项目链接 https://github.com/peng-zhihui/HoloCubic
-* 本项目的地址 https://github.com/ClimbSnail/HoloCubic_AIO （最新版本）
-* 或者 https://gitee.com/ClimbSnailQ/HoloCubic_AIO
+`Holocubic` was originally an open-source project by [稚晖君](https://github.com/peng-zhihui), and this project is a third-party independent firmware running on HoloCubic hardware.
 
-### 开发人员
-* AIO框架开发和部分APP编写：[ClimbSnail](https://github.com/ClimbSnail)
-* 2048游戏应用开发：[AndyXFuture](https://github.com/AndyXFuture)
-* 新版天气时钟应用开发：[PuYuuu](https://github.com/PuYuuu)
-* BiliBili粉丝应用开发：[cnzxo](https://github.com/cnzxo/)
-* 纪念日、心跳应用开发：[WoodwindHu](https://github.com/WoodwindHu)
-* PC资源监控应用开发：[Jumping99](https://github.com/Jumping99)
-* 多功能动画应用开发：[LHYHHD](https://github.com/LHYHHD)
-* 开发人员持续加入中。。。。
+**AIO** stands for **All in One**, aiming to integrate as many features as possible into the Holocubic firmware while keeping it open-source. The firmware currently contains `20,000+` lines of code, with the host software at `4,000` lines (excluding font libraries and images). We invite everyone to join in developing the AIO firmware, host software, and peripherals to meet more users' needs.
 
-_**欢迎加入AIO内测QQ讨论群**_
+This firmware is fully open-source for learning and experimentation. If you use this project for secondary development or partial reference, please provide appropriate attribution.
 
-* 一群群号 `755143193`
-* 二群群号 `860112883`
-* 三群群号 `676732387`
-* 四群群号 `749207817`
-* 五群群号 `866784418`
+### 🔗 Project Links
 
-![QQ_Group](https://gitee.com/ClimbSnailQ/Project_Image/raw/master/OtherProject/holocubic_qq_group.jpg)
+* **Original project**: https://github.com/peng-zhihui/HoloCubic
+* **Original AIO project**: https://github.com/ClimbSnail/HoloCubic_AIO
+* **This project (Latest)**: https://github.com/asdfghj1237890/HoloCubic_AIO
 
-### 主要特点
-1. 聚合多种APP，内置天气、时钟、相册、特效动画、视频播放、电脑投屏、web设置等等。（各APP具体使用参考说明书）
-2. 开机无论是否插接tf卡、mpu6050是否焊接正常、是否连接wifi（一定要2.4G的wifi），都不影响系统启动和屏幕显示。
-3. 程序相对模块化，低耦合。
-4. 提供web界面进行配网以及其他设置选项。注：具体操作参考`APP介绍`
-5. 提供web端连入除了支持ip访问，也支持域名直接访问 http://holocubic （部分浏览器可能支持不好）
-6. 提供web端的文件上传到SD卡（包括删除），无需拔插SD来更新图片。
-7. 提供全套上位机软件，并开源上位机源码。 https://github.com/ClimbSnail/HoloCubic_AIO_Tool
+---
 
-### 本固件设计了一套低耦合框架，更有利于多功能的实现
-B站功能操作演示视频链接 https://www.bilibili.com/video/BV1wS4y1R7YF/
+## 👥 Development Team
+
+* **AIO Framework & Core Apps**: [ClimbSnail](https://github.com/ClimbSnail)
+* **2048 Game**: [AndyXFuture](https://github.com/AndyXFuture)
+* **New Weather Clock**: [PuYuuu](https://github.com/PuYuuu)
+* **BiliBili Fans App**: [cnzxo](https://github.com/cnzxo/)
+* **Anniversary & Heartbeat Apps**: [WoodwindHu](https://github.com/WoodwindHu)
+* **PC Resource Monitor**: [Jumping99](https://github.com/Jumping99)
+* **Multi-function Animation**: [LHYHHD](https://github.com/LHYHHD)
+* **Stock App**: redwolf
+* More developers joining...
+
+---
+
+## ✨ Key Features
+
+1. **Rich APP Ecosystem**: Built-in weather, clock, photo album, special effects, video player, PC screen sharing, web settings, and more
+2. **Flexible Hardware**: Boot normally regardless of TF card insertion, MPU6050 soldering status, or WiFi connection (requires 2.4G WiFi)
+3. **Modular Design**: Low-coupling architecture for easy extensibility
+4. **Web Configuration**: Configure network and settings via web interface (see APP Introduction for details)
+5. **Multiple Access Methods**: Access via IP address or domain name (http://holocubic) - some browsers may have limited support
+6. **Remote File Management**: Upload/delete files on SD card via web interface without physical access
+7. **Complete PC Tools**: Full host software suite with open-source code: https://github.com/ClimbSnail/HoloCubic_AIO_Tool
+
+### 📺 Demo
+
+**Video Tutorial**: https://www.bilibili.com/video/BV1wS4y1R7YF/
+
+<details>
+<summary>📸 Screenshots</summary>
 
 ![HomePage](Image/holocubic_main.jpg)
-
 ![HomePage](Image/holocubic_home.png)
-
 ![UploadPage](Image/holocubic_upload.png)
-
 ![SettingPage](Image/holocubic_setting.png)
 
+</details>
 
-### 固件刷写工具（无需搭建任何IDE环境）
-下载群中的上位机进行刷机。
-1. `bootloader_dio_40m.bin`启动的`bootloader`。
-2. `partitions.bin`分区文件
-3. `boot_app0.bin`
-4. 最新的固件`HoloCubic_AIO_XXX.bin`
+---
 
-其中`HoloCubic_AIO_XXX.bin`文件随着每次版本更新而更新，其他三个文件基本不会变动。
 
-将以上前三个文件与`CubicAIO_Tool.exe`放在同一个目录下，双击运行`CubicAIO_Tool.exe`，软件中选择最新的固件`HoloCubic_AIO_XXX.bin`，即可刷写固件。
+## 🔧 Firmware Flashing (No IDE Required)
 
-上位机操作演示视频链接 https://b23.tv/5e6uDh
+Download the PC tool from the QQ group to flash the firmware.
 
-本上位机与AIO固件一样，坚持开源，开源地址：https://github.com/ClimbSnail/HoloCubic_AIO_Tool
+### Required Files
+
+1. `bootloader_dio_40m.bin` - Bootloader
+2. `partitions.bin` - Partition file
+3. `boot_app0.bin` - Boot app
+4. `HoloCubic_AIO_XXX.bin` - Latest firmware (updated with each version)
+
+> **Note**: Files 1-3 remain stable across updates. Only the firmware file (`HoloCubic_AIO_XXX.bin`) changes with each version.
+
+### Flashing Steps
+
+1. Place files 1-3 and `CubicAIO_Tool.exe` in the same directory
+2. Run `CubicAIO_Tool.exe`
+3. Select the latest firmware `HoloCubic_AIO_XXX.bin`
+4. Flash the firmware
+
+**Video Tutorial**: https://b23.tv/5e6uDh
+
+**Open-source PC Tool**: https://github.com/ClimbSnail/HoloCubic_AIO_Tool
+
+<details>
+<summary>🖼️ Tool Screenshots</summary>
 
 ![AIO_TOOL](Image/holocubic_aio_tool.png)
-
 ![AIO_TOOL](https://gitee.com/ClimbSnailQ/Project_Image/raw/master/OtherProject/holocubic_aio_tool.png)
 
-### 开机注意事项
-由于小电视使用的是MPU6050陀螺仪加速度计，通电前3秒需要保持小电视自然放置（不要手拿），等待传感器初始化，初始化完毕后RGB灯会完全亮起，之后就可以正常操作了。插不插内存卡都不影响正常开机，如果6050焊接有问题，初始化后姿态读取会错乱（现象：应用会不断切换）。
+</details>
 
-### 功能切换说明：
-1. TF卡的文件系统为fat32。TF为非必须硬件，但相册、视频播放等功能需依赖与此。如果准备使用内存卡，在使用内存卡前最好将本工程中`放置到内存卡`目录里的所有文件和文件夹都放在TF卡的根目录。
-2. 插不插tf内存卡都不影响开机，但影响某些APP的功能（各自APP介绍里会说明）。
-3. 左右摇晃`0.5s`即可切换选择各类APP。
-4. 向前倾斜`1s`钟即可进入当前页的APP应用，今后还会整合更多功能，同样后仰1s即退出该APP。
+---
 
-### APP介绍
+## 📚 Troubleshooting Guide
 
-##### 网页配置服务（Web Server）
+Having issues with hardware assembly or soldering? Check out our comprehensive troubleshooting guide:
+
+**[🔧 HoloCubic Troubleshooting Guide v2.4](./HoloCubic_Troubleshooting_Guide_v2.4.md)**
+
+This guide covers:
+- Hardware versions and compatibility
+- PCB fabrication and soldering
+- Common issues and solutions
+- Component selection and vendors
+- Multimeter usage and testing procedures
+
+---
+
+## 🚀 Getting Started
+
+### ⚠️ Power-On Important Notes
+
+The device uses an MPU6050 gyroscope/accelerometer. For proper initialization:
+
+1. **Keep the device stationary** for the first 3 seconds after power-on (don't hold it)
+2. Wait for sensor initialization to complete - the RGB LED will fully light up
+3. After initialization, normal operation can begin
+
+> **Troubleshooting**: If the MPU6050 soldering is faulty, the orientation reading will be erratic (symptom: apps constantly switching). TF card insertion does not affect boot.
+
+### 🎮 Operation Guide
+
+#### TF Card Setup
+- **File System**: FAT32
+- **Required for**: Photo album, video playback
+- **Setup**: Copy all files and folders from the `放置到内存卡` directory to the TF card root before first use
+- **Note**: Device boots normally with or without TF card, but some APP functions require it
+
+#### Gesture Controls
+| Gesture | Duration | Action |
+|---------|----------|--------|
+| Shake left/right | 0.5s | Switch between APPs |
+| Tilt forward | 1s | Enter current APP |
+| Tilt backward | 1s | Exit current APP |
+
+---
+
+## 📱 APP Introduction
+
+<details>
+<summary><b>🌐 Web Server (网页配置服务)</b></summary>
+
 ![WebPage](Image/holocubic_web.png)
 
-1. 运行条件：无。注：wifi等信息是保存在flash中，内存卡完全不影响wifi功能的连接。
-2. 启用后，会显示`Web Sever Start`。小电视开启AP模式，建立在`AP_IP`上（屏幕的服务界面有标注），AP模式的热点名为`HoloCubic_AIO`无密码。
-3. 开始使用时，应让电脑与`HoloCubic`处于同一网络环境（同网段）。如果之前没连接过wifi则需要使用电脑连接HoloCubic放出的热点名为`HoloCubic_AIO`无密码的wifi。
-4. 在浏览器地址栏输入`Local_IP`或者`AP_IP`（ http://192.168.4.2 也支持域名直接访问 http://holocubic ），即可进入管理设置后台。推荐使用`ip地址`访问。
-5. 网页里可设置系统参数、天气APP参数、相册参数、播放器参数等等。
-6. 由于当前APP数量多，切换查找比较繁琐，也可以在`Web Server`中配置`自启动APP`。
+- **Requirements**: None (WiFi info stored in flash, independent of TF card)
+- **Access**: 
+  - Device creates AP `HoloCubic_AIO` (no password) at `192.168.4.2`
+  - Or use domain: http://holocubic
+  - Recommended: Use IP address for better compatibility
+- **Features**:
+  - System parameter configuration
+  - Weather APP settings
+  - Photo album parameters
+  - Player settings
+  - Auto-start APP configuration
 
-##### 文件管理器（File Manager）
-作用：通过无线网络管理内存卡上的文件。
+**First-time setup**: Connect PC to HoloCubic's WiFi hotspot, then configure via web interface.
 
-1. 运行APP条件：必须是已经正常配置wifi。必须插内存卡。为避免wifi连接时，功率不够导致重启，请确保USB口供电充足。目前部分功能还在开发中。
-2. 进入`Holocubic`文件管理器后会自动连接已配置的wifi，并显示出IP地址。
-3. 未完成：在上位机的文件管理器软件中填入自己`Holocubic`的IP地址（端口可以不用改），点击连接。
+</details>
 
-注：目前文件管理器临时使用`windows资源管理器`，在地址栏输入 ftp://holocubic:aio@192.168.123.241 （192.168.123.241为我的小电视上显示的IP地址，如果提示开启访问，就开启）
+<details>
+<summary><b>📁 File Manager (文件管理器)</b></summary>
 
-##### 相册（Picture）
-1. 运行APP条件：必须插内存卡，内存卡的根目录下必须存在`image/`目录（也可以使用`Web Server服务`APP 通过浏览器上传照片），`image/`目录下必须要有图片文件（jpg或者bin）。
-2. 将需要播放的图片转化成一定格式（.jpg或.bin），再保存在`image/`目录中，图片文件名必须为英文字符或数字（但不能以数字开头）。
-3. 使用固件进入相册APP后，将会读取`image/`目录下的图片文件。
-4. `WebServer`的网页端可以进行附加功能的设置。
+**Purpose**: Manage TF card files wirelessly
 
-关于图片转换：使用附带的上位机转化（分辨率随意，软件会自动压缩到指定分辨率）。
-* 常用的天气图片，转换为c数组，格式为Indexed 16 colors 选择 C array。
-* 不常用的图片则可以转换成（True color with alpha 选择Binary RGB565）bin文件存储到SD卡中，这样可以省下一些程序存储空间用来增加功能。支持转化为jpg图片。
+- **Requirements**: 
+  - WiFi configured
+  - TF card inserted
+  - Sufficient USB power supply
+- **Usage**: Enter via Windows File Explorer: `ftp://holocubic:aio@[YOUR_IP]`
+  - Replace `[YOUR_IP]` with the IP shown on device screen
 
-##### 视频播放（Media）
-1. 运行APP条件：必须插内存卡，内存卡的根目录下必须存在`movie/`目录。
-2. 将所需要播放的视频（最好长宽比是1:1），使用本固件配套的使用转化工具转化为目标文件（mjpeg或者rgb格式都可），存放在`movie/`目录下，视频文件名必须为英文字符或数字（但不能以数字开头）。
-3. 运行播放器APP后，将会读取`movie/`目录下的视频文件。
-4. 默认功率下，无任何动作90s后进入低功耗模式，120s后进入二级低功耗模式，具体表现为播放画面帧数下降。
-5. `WebServer`的网页端可以进行附加功能的设置。
+> ⚠️ **Note**: Some features still under development
 
-##### 屏幕分享、电脑投屏（Screen share）
-1. 运行APP条件：无需内存卡，但需要利用`Web Server服务`app设置wifi密码（确保能连上路由器）。为避免wifi连接时，功率不够导致重启，请确保USB口供电充足。
-2. 上位机目前使用第三方软件，后期会独立编写投屏上位机，提高性能。
-3. 本投屏上位机使用的是[大大怪](https://gitee.com/superddg123/esp32-TFT/tree/master)的上位机，如果画面卡顿可以降低画质来提升帧数。
-4. `WebServer`的网页端可以进行附加功能的设置。
+</details>
 
-##### 天气、时钟（Weather）
-一共有两款天气时钟APP
-###### 新版 weather
-1. 新版由`PuYuuu`模仿了`misaka`的时钟界面。使用高德天气API。
-2. 运行APP条件：必须是已经联网状态。
-3. 使用新版天气时钟，需要再"Web Server"网页服务中修改`城市名（精准的城市代码）`、`API的个人Key`。（城市代码的参考编码表 https://lbs.amap.com/api/webservice/download ，key的获取方法 https://lbs.amap.com/api/webservice/create-project-and-key ）
-###### 旧版 weather old
-1. 旧版UI设计模仿了[CWEIB](https://github.com/CWEIB)
-2. 运行APP条件：必须是已经联网状态，且设置好地点、weather_key。不插内存卡大多数情况能正常工作。
-3. 一般情况下不插内存卡也可以工作，但部分天气图标是存在内存卡中（由于内部flash不够用）的，需要将固件附带的`weather/`文件夹复制到tf卡根目录。
-4. 使用旧版天气时钟，需要再"Web Server"网页服务中修改心知天气的`心知天气 城市名`、`key（私钥）`。（申请地址 https://seniverse.com 。程序默认使用的是v3版本的api）
+<details>
+<summary><b>🖼️ Picture Album (相册)</b></summary>
 
-注：即使断网后，时钟也依旧运行。（开机最好连接wifi，这样会自动同步时钟。使用中会间歇尝试同步时钟）
+- **Requirements**: 
+  - TF card with `image/` directory
+  - Image files in `.jpg` or `.bin` format
+- **Setup**:
+  1. Convert images using PC tool (any resolution, auto-compressed)
+  2. Save to `image/` directory
+  3. Filename must be alphanumeric (cannot start with number)
+- **Image Formats**:
+  - Weather icons: C array (Indexed 16 colors)
+  - Other images: Binary RGB565 `.bin` or `.jpg`
+- **Settings**: Additional features configurable via WebServer
 
-##### 特效动画（Idea）
-1. 运行APP条件：无。内置的几种特效动画。
+</details>
 
-注：移植群友"小飞侠"的功能，在此感谢！
+<details>
+<summary><b>🎬 Video Player (Media)</b></summary>
 
-##### 2048 APP
-1. `2048`游戏由群友`AndyXFuture`编写并同意，由`ClimbSnail`合入AIO固件。原项目链接为`https://github.com/AndyXFuture/HoloCubic-2048-anim`
-2. 运行APP条件：无。基本屏幕能亮就行。
-3. 操作注意：游戏中`向上`和`向下`操作由于与原`进入`和`退出`为同一个动作，系统已操作时长为区分动作，游戏中`向上`和`向下`正常操作即可，`进入`和`退出`需要倾斜1秒中方可触发。
+- **Requirements**: TF card with `movie/` directory
+- **Setup**:
+  1. Convert videos (1:1 aspect ratio recommended) using conversion tool
+  2. Save as `.mjpeg` or `.rgb` format in `movie/` directory
+  3. Filename must be alphanumeric (cannot start with number)
+- **Power Saving**:
+  - Low-power mode after 90s idle
+  - Secondary low-power mode after 120s (reduced frame rate)
+- **Settings**: Additional features configurable via WebServer
 
-##### BiliBili APP
-1. 运行APP条件：内存卡中必须要有名为`bilibili`的文件夹。必须是已经正常配置wifi。为避免wifi连接时，功率不够导致重启，请确保USB口供电充足。
-2. `UID`查看方法：电脑浏览器上打开B站并登入账号，之后浏览器打开一个空白页粘贴回车这个网址 https://space.bilibili.com/ ，网址尾巴会自动多出一串纯数字码，此即为UID。
-3. 第一次使用之前，要先在`WebServer App`的网页上填写`UID`码。
-4. 需要在内存卡中名为`bilibili`的文件夹里添加一张名为`avatar.bin`自己B站头像的图片，分辨率为`100*100`的`bin`文件（可以使用AIO上位机转换）。
+</details>
 
-注：程序由`cnzxo`编写。
+<details>
+<summary><b>🖥️ Screen Sharing (屏幕分享)</b></summary>
 
-##### 纪念日（Anniversary）
-1. 运行APP条件：联网状态
-2. 第一次使用之前，要先在`WebServer App`的网页上填写纪念日名称和日期，目前可以设置两个纪念日。纪念日支持的字有`生日还有毕业养小恐龙种土豆老婆女朋友爸妈爷奶弟妹兄姐结婚纪念`，如果纪念日名称包含的字不在这个范围内，请自行生成字体文件并替换`src\app\anniversary\msyhbd_24.c`文件。日期格式如`2022.5.8`，如果年份设置为0，则被认为是每年重复的纪念日（如生日）。
+- **Requirements**: 
+  - WiFi configured via Web Server
+  - Sufficient USB power supply
+- **PC Tool**: Uses [大大怪's tool](https://gitee.com/superddg123/esp32-TFT/tree/master)
+- **Tip**: Reduce quality to improve frame rate if laggy
 
-注：纪念日和心跳都复现自[LizCubic](https://github.com/qingehao/LizCubic)项目。程序由`WoodwindHu`编写
+</details>
 
-##### 心跳（Heartbeat）
-1. 运行APP条件：联网状态（需要开启性能模式），一个开放1883端口的mqtt服务器，两个HoloCubic。
-2. 第一次使用之前，要先在`WebServer App`的网页上填写配置。role可以选择0和1，分别代表互动的两个HoloCubic。client_id为设备的唯一标识，这里请将这两个Holocubic设置成同一个QQ号。mqtt_server填写自己的mqtt服务器地址,port填写端口号。用户名以及密码根据具体的服务器配置而定。
-3. 设置完心跳APP之后，开机自动联网，并开启mqtt客户端。收到另一个HoloCubic的消息之后自动进入APP。正常方式进入APP则自动向另一个HoloCubic发送消息。
-4. 群内不定时更新免费的服务，具体配置参数可以问管理或者群友。
+<details>
+<summary><b>🌤️ Weather & Clock (天气、时钟)</b></summary>
 
-注：纪念日和心跳都复现自[LizCubic](https://github.com/qingehao/LizCubic)项目。程序由`WoodwindHu`编写
+#### New Version (weather)
+- **API**: Amap Weather API
+- **Requirements**: Internet connection
+- **Setup**:
+  - Configure city code: [Amap City Codes](https://lbs.amap.com/api/webservice/download)
+  - Get API key: [Amap Key Creation](https://lbs.amap.com/api/webservice/create-project-and-key)
+- **UI**: Inspired by `misaka` clock interface
 
-##### 股票行情实时查看（Stock）
-1. 运行APP条件：必须是已经正常配置wifi。为避免wifi连接时，功率不够导致重启，请确保USB口供电充足。
-2. 第一次使用之前，要先在`WebServer App`的网页上修改自己想要的`股票代码`。
+#### Old Version (weather old)
+- **API**: Seniverse Weather API (v3)
+- **Requirements**: Internet connection, TF card optional
+- **Setup**:
+  - Copy `weather/` folder to TF card root (some icons stored on card)
+  - Configure city name and API key at https://seniverse.com
+- **UI**: Inspired by [CWEIB](https://github.com/CWEIB)
 
-注：程序由`redwolf`编写
+> **Note**: Clock continues running even when offline. Best to connect WiFi on boot for time sync.
 
-##### PC资源监控(PC Resource)
-1. 运行条件: 必须是已经正常配置wifi。PC端与HoloCubic处于同一网段，在`WebServer APP`中这只PC的服务IP地址（具体看教程）。
-2. 下载[AIDA64](https://www.aida64.com/downloads)，PC安装AIDA64后的导入配置文件`aida64_setting.rslcd`（在`AIO_Firmware_PIO\src\app\pc_resource`目录下或者群文件中）
+</details>
 
-注：具体操作步骤较长，见群文档。本应用由`Jumping99`开发。
+<details>
+<summary><b>✨ Special Effects (Idea)</b></summary>
 
-##### 多功能动画(LH&LXW)
+- **Requirements**: None
+- **Features**: Built-in animation effects
+- **Credits**: Ported from community member "小飞侠"
 
-给透明小电视下载带有LH&LXW APP的固件，进入系统，选中LH&LXW APP，后仰进入
-APP，前倾退出APP，左/右倾 选择不同功能，后仰进入选中的功能。
+</details>
 
-【功能说明】
+<details>
+<summary><b>🎮 2048 Game</b></summary>
 
-功能1： 代码雨；进入此功能后——左/右倾 可切换代码雨大小、前倾退出此功能。
+- **Requirements**: None (just working screen)
+- **Controls**: 
+  - Up/Down: Quick tilt
+  - Enter/Exit: Hold tilt for 1 second
+- **Developer**: [AndyXFuture](https://github.com/AndyXFuture/HoloCubic-2048-anim)
 
-功能2：赛博相册；进入此功能后——左倾停止自动切换、右倾恢复自动切换、后倾在静态和动态间切换、前倾退出此功能。
+</details>
 
-进入此功能前，得确保你的内存卡中有以下文件
-```
-1. ./LH&LXW/cyber/imgx.cyber 存放需要显示的图片文件(x为0~99)
-2. ./LH&LXW/cyber/cyber_num.txt 存放需要显示的图片文件数(00~99) 例如7个图片，写07
-注意：./LH&LXW/cyber/imgx.cyber 中的图片数必须等于./LH&LXW/cyber/cyber_num.txt 中用户输入的图片文件数
-```
-.cyber格式的图片文件由以下python代码生成：
+<details>
+<summary><b>📺 BiliBili Fans APP</b></summary>
+
+- **Requirements**:
+  - TF card with `bilibili/` folder
+  - WiFi configured
+  - Avatar image: `bilibili/avatar.bin` (100×100 pixels)
+- **Setup**:
+  1. Get UID: Visit https://space.bilibili.com/ (number in URL)
+  2. Configure UID in WebServer
+  3. Add avatar image (convert using AIO tool)
+- **Developer**: cnzxo
+
+</details>
+
+<details>
+<summary><b>🎂 Anniversary (纪念日)</b></summary>
+
+- **Requirements**: Internet connection
+- **Setup**: Configure via WebServer
+  - Name and date (format: `2022.5.8`)
+  - Year = 0 for recurring anniversaries (e.g., birthdays)
+  - Supports up to 2 anniversaries
+- **Supported Characters**: `生日还有毕业养小恐龙种土豆老婆女朋友爸妈爷奶弟妹兄姐结婚纪念`
+- **Credits**: Based on [LizCubic](https://github.com/qingehao/LizCubic), developed by WoodwindHu
+
+</details>
+
+<details>
+<summary><b>💓 Heartbeat (心跳)</b></summary>
+
+- **Requirements**:
+  - Internet connection (performance mode)
+  - MQTT server (port 1883)
+  - Two HoloCubic devices
+- **Setup**: Configure via WebServer
+  - Role: 0 or 1 (for two devices)
+  - Client ID: Same QQ number for both devices
+  - MQTT server, port, credentials
+- **Usage**: Auto-enters when receiving message from paired device
+- **Credits**: Based on [LizCubic](https://github.com/qingehao/LizCubic), developed by WoodwindHu
+
+> Free MQTT service info available in QQ groups
+
+</details>
+
+<details>
+<summary><b>📈 Stock Market (股票行情)</b></summary>
+
+- **Requirements**: WiFi configured, sufficient USB power
+- **Setup**: Configure stock codes via WebServer
+- **Developer**: redwolf
+
+</details>
+
+<details>
+<summary><b>💻 PC Resource Monitor</b></summary>
+
+- **Requirements**:
+  - WiFi configured
+  - PC and HoloCubic on same network
+  - [AIDA64](https://www.aida64.com/downloads) installed on PC
+- **Setup**:
+  1. Import config file `aida64_setting.rslcd` (in `AIO_Firmware_PIO\src\app\pc_resource\`)
+  2. Set PC service IP in WebServer
+- **Developer**: Jumping99
+
+> See group documentation for detailed setup steps
+
+</details>
+
+<details>
+<summary><b>🎨 Multi-function Animation (LH&LXW)</b></summary>
+
+**Controls**:
+- Tilt backward: Enter APP / Enter selected function
+- Tilt forward: Exit
+- Tilt left/right: Switch functions
+
+### Features
+
+**1. Matrix Rain (代码雨)**
+- Left/Right: Switch size
+- Forward: Exit
+
+**2. Cyber Album (赛博相册)**
+- **TF Card Setup**:
+  ```
+  ./LH&LXW/cyber/imgx.cyber (x=0~99)
+  ./LH&LXW/cyber/cyber_num.txt (image count, e.g., "07")
+  ```
+- **Image Conversion** (48×40 pixels):
+
 ```python
 import cv2
-img_path = './123.jpg'#输入图片路径(图片大小必须48x40)
-out_path = './123.cyber'#输出文件路径
+img_path = './123.jpg'
+out_path = './123.cyber'
 img = cv2.imread(img_path)
 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 with open(out_path, 'wb') as f:
@@ -212,152 +369,270 @@ with open(out_path, 'wb') as f:
             f.write(b)
 ```
 
-功能3：QQ超级表情；进入此功能后——左/右倾 选择不同表情、后仰播放当前表情、在播放时前倾会退出播放、在选择表情时前倾会退出此功能。播放表情时自动循环播放33.3秒，然后播放下一个，播放过程中可以左/右倾 手动切换。
+- **Controls**:
+  - Left: Stop auto-switch
+  - Right: Resume auto-switch
+  - Backward: Toggle static/dynamic
+  - Forward: Exit
 
-进入此功能前，得确保你的内存卡中有以下文件
+**3. QQ Emoji (QQ超级表情)**
+- **TF Card Setup**:
+  ```
+  ./LH&LXW/emoji/videos/videox.mjpeg (240×240, x=0~99)
+  ./LH&LXW/emoji/images/imagex.bin (60×60, x=0~99)
+  ./LH&LXW/emoji/emoji_num.txt (video count)
+  ```
+- **Controls**:
+  - Left/Right: Select emoji
+  - Backward: Play current emoji
+  - Forward: Exit (during selection) or stop playback
+- Auto-plays each emoji for 33.3s
+
+**4. Eye Animation (眼珠子)**
+- Left/Right: Switch eye style
+- Forward: Exit
+
+**5. Dynamic Heart (动态心)**
+- Shake device: Particles scatter
+- Hold still: Particles form heart shape
+- Forward: Exit
+
+**Demo Video**: https://www.bilibili.com/video/BV1wK421173C
+
+</details>
+
+---
+
+
+## 🛠️ Development & Compilation
+
+### Build Environment
+
+This project is developed using **PlatformIO** on **VSCode** with the **ESP32-Pico Arduino** platform.
+
+**Tutorial**: https://b23.tv/kibhGD
+
+### Setup Steps
+
+1. **Configure Upload Port**: Modify `upload_port` in `platformio.ini` to match your COM port
+
+2. **Disable Apps (Optional)**: To exclude built-in apps, set the corresponding `APP macro` to `0` in `AIO_Firmware_PIO\src\app\app_conf.h`
+
+3. **SPI Library**: ✅ No modification needed! The project includes a pre-configured SPI library in the `lib/` directory with correct pin settings
+
+<details>
+<summary>📜 Legacy SPI Configuration (for reference only - can be ignored)</summary>
+
+~~Previous versions required manual SPI library modification to prevent SD card read failures:~~
+
+~~Both PlatformIO and Arduino IDE users needed to modify the MISO default pin to `26` in the SPI library. For example, in Arduino IDE's package path `esp32\hardware\esp32\1.0.4\libraries\SPI\src\SPI.cpp`:~~
+
+```cpp
+if(sck == -1 && miso == -1 && mosi == -1 && ss == -1) {
+    _sck = (_spi_num == VSPI) ? SCK : 14;
+    _miso = (_spi_num == VSPI) ? MISO : 12; // Change to 26
+    _mosi = (_spi_num == VSPI) ? MOSI : 13;
+    _ss = (_spi_num == VSPI) ? SS : 15;
 ```
-1. ./LH&LXW/emoji/videos/videox.mjpeg   存放要播放的视频（大小240x240）(x为0~99)
-2. ./LH&LXW/emoji/images/imagex.bin 存放要播放的视频的封面（大小60x60）(x为0~99)
-3. ./LH&LXW/emoji/emoji_num.txt 存放要播放的视频数(00~99) 例如7个视频，写07
 
-注意：./LH&LXW/emoji/videos/ 中的视频数必须等于 ./LH&LXW/emoji/images/ 中的封面数
-同时必须等于 ./LH&LXW/emoji/emoji_num.txt 中用户输入的视频个数。
-```
-功能4：眼珠子；进入此功能后——左/右倾 切换眼睛样式、前倾退出此功能。
+~~This was necessary because the hardware uses two hardware SPI connections for screen and SD card. HSPI's default MISO pin 12 is used for flash voltage setting during ESP32 boot, and pulling it up before power-on prevents chip startup. We replaced it with pin 26.~~
 
-功能5：动态心；进入此功能后——晃动小电视，组成♥的粒子也会晃动，停止晃动后，粒子又会聚集成♥的样子、、前倾退出此功能。
+</details>
 
-APP演示视频：【LVGL菜单#透明小电视#LVGL开发】 https://www.bilibili.com/video/BV1wK421173C/?share_source=copy_web&vd_source=68337adbea96c8cef50403a4b2809df6
+---
 
+## 📐 Architecture & Framework
 
-### 关于编译工程代码
-1. 本工程代码是基于vscode上的PlatformIO插件中的ESP32-Pico的Arduino平台开发。具体教程可以上`B站`找。推荐教程[https://b23.tv/kibhGD](https://b23.tv/kibhGD)
-2. 记得修改工程下`platformio.ini`文件中`upload_port`字段成对应自己COMM口。
-3. 如果希望屏蔽掉内置的部分文件，请在`AIO_Firmware_PIO\src\app\app_conf.h`中对应的`APP宏`修改为`0`即可屏蔽。
-4. 目前最新版本已经不需要大家特意修改SPI库中的SPI引脚了，本工程的`lib`下单独放置了一个已经修改好了SPI引脚的SPI库。以下是此前版本的操作（可忽略）
-
-~~然后这里需要修改一个官方库文件才能正常使用(不然会导致内存卡读取失败)：
-PlatformIO和ArduinoIDE用户都需安装ESP32的Arduino固件支持包（百度有海量教程）。不管哪种开发方式都需要修改`SPI`库中的`MISO`默认引脚为`26`，例如arduinoIDE的包路径为`esp32\hardware\esp32\1.0.4\libraries\SPI\src\SPI.cpp`文件中，**修改以下代码中的MISO为26**：~~
-```
-    if(sck == -1 && miso == -1 && mosi == -1 && ss == -1) {
-        _sck = (_spi_num == VSPI) ? SCK : 14;
-        _miso = (_spi_num == VSPI) ? MISO : 12; // 需要改为26
-        _mosi = (_spi_num == VSPI) ? MOSI : 13;
-        _ss = (_spi_num == VSPI) ? SS : 15;
-```
-~~这是因为，硬件上连接屏幕和SD卡分别是用两个硬件SPI，其中HSPI的默认MISO引脚是12，而12在ESP32中是用于上电时设置flash电平的，上电之前上拉会导致芯片无法启动，因此我们将默认的引脚替换为26。~~
-
-### 程序框架图
+### Framework Diagram
 
 ![HoloCubic_AIO_Frame](Image/holocubic_AIO_Frame.png)
 
-![HoloCubic_AIO_Frame](https://gitee.com/ClimbSnailQ/Project_Image/raw/master/OtherProject/holocubic_AIO_Frame.png)
+**Framework Explanation Video**: https://www.bilibili.com/video/BV1jh411a7pV?p=4
 
-AIO框架讲解链接 https://www.bilibili.com/video/BV1jh411a7pV?p=4
+### Development Resources
 
-关于UI的设计可以自行关注下`Edgeline
-`、`gui-guider`等工具。
+#### UI Design Tools
+- **Edgeline**
+- **GUI Guider**
 
-platformIO模拟器 https://github.com/lvgl/lv_platformio
+#### LVGL Resources
+- **Learning**: http://lvgl.100ask.org | http://lvgl.100ask.net
+- **Simulator**: https://github.com/lvgl/lv_platformio
+- **Font Tool**: `LvglFontTool V0.4` (located in `Doc/` directory)
 
-应用图标(128*128)：可以下载阿里矢量图 https://www.iconfont.cn/
+#### Assets
+- **App Icons** (128×128): Download from [Alibaba IconFont](https://www.iconfont.cn/)
 
-调试过程中报错定位代码：`xtensa-esp32-elf-addr2line -pfiaC -e 固件名.elf Backtrace地址信息`
+#### Development Utilities
 
-关于lvgl的学习参考：`http://lvgl.100ask.org`、`http://lvgl.100ask.net`
+**Debug Error Location**:
+```bash
+xtensa-esp32-elf-addr2line -pfiaC -e firmware_name.elf [Backtrace_address]
+```
 
-lvgl的字体生成可以使用：`LvglFontTool V0.4` 已放置在Doc目录下
+**Extract Chinese Characters from C Files**:
+```bash
+python Script/get_font.py path/to/font_file.c
+```
 
-c文件中提取所有汉字：可以使用工程下的`Script/get_font.py`脚本提取。`python get_font.py 字模.c文件的路径`
+---
 
-### 版本更新日志
-CurVersion:v2.3.0
+## 📝 Version History
 
-#### HoloCubic_AIO固件_v2.3.x.bin
-1. 股票：重构数据处理与UI，新增国际股市支持，修复内存泄漏/溢出。
-2. 天气：集成AccuWeather API，提升稳定性，多语言与繁体中文字体优化。
-3. Web设置：增强多语言与界面表现。
-4. 纪念日：修复时间API。
-5. 其他：精简不必要功能与资源；修复字体包含问题；优化番茄钟界面。
+**Current Version**: `v2.3.0`
 
-#### HoloCubic_AIO固件_v2.2.x.bin
-1. 将LVGL更新至v8.3.3，修改了所有涉及LVGL的APP。
-2. 走查所有有返回值却没有return的函数。
+<details>
+<summary><b>v2.3.x</b> - Latest</summary>
 
-#### HoloCubic_AIO固件_v2.1.x.bin
-1. 新增天气字库。
-2. 新增股票APP。
-3. 新增亮度调节的阈值，避免死机。
+### Firmware Changes
+- **Stock**: Refactored data processing & UI, added international market support, fixed memory leaks
+- **Weather**: Integrated AccuWeather API, improved stability, multi-language & Traditional Chinese font optimization
+- **Web Settings**: Enhanced multi-language support and UI
+- **Anniversary**: Fixed time API
+- **Other**: Streamlined unnecessary features, fixed font inclusion issues, optimized Pomodoro interface
 
-#### HoloCubic_AIO固件_v2.0.x.bin
-1. 修复7日天气只读北京问题、修改api，新增湿度。
-2. 支持调整mpu6050操作方向的映射
-3. 支持littlefs（转移现有的kv储存）
-4. SD卡支持SPI，SD双模式（待更新）
-5. 新增参数设置
-6. 联合调整投屏上位机（待更新）
-7. 修复2048（待更新）
-8. 支持隐藏APP（待更新）
-9. 修复BIilibili api，以及内存泄漏。
-10. 修复所有App使用lvgl时样式没lv_style_reset导致的内存泄露。
-11. 新版天气支持三个字的城市名
-12. 增加性能模式的支持。
-13. 新增HeartBeat、Anniversary两个App。
+</details>
 
-##### HoloCubic_AIO固件_v1.9.x.bin
-1. 大改屏幕分享APP，修复屏幕卡顿问题（防止过热，性能恒定为中等）。
-2. 新增对ftp文件传输的支持（未更新上位机）。
-3. 视频播放中加入发热的控制，避免ESP32由于过热损坏。
+<details>
+<summary><b>v2.2.x</b></summary>
 
-##### HoloCubic_AIO固件_v1.8.x.bin
-1. 增加2048游戏应用、新版天气时钟、B站粉丝应用。
-2. 修改MPU6050的操作，新增两个键值。
-3. 修改图片的循环播放。修复原时钟界面卡顿问题。
-4. 新增事件队列。
+- Updated LVGL to v8.3.3, modified all LVGL-related APPs
+- Fixed all functions with return values but missing return statements
 
-##### HoloCubic_AIO固件_v1.7.x.bin
-1. 增加屏幕分享。增加Setting应用。
-2. 增加应用名。
-3. 新增WebServer里对屏幕亮度、方向的调节。
-4. 有效增加对视频、相册切换方向的支持。
-5. 修复Idea App中图形未清空导致重叠画面。
-6. 修复部分应用内存未释放问题。
-7. 将天气图标更改为和风天气图标。
+</details>
 
-##### HoloCubic_AIO固件_v1.6.x.bin
-1. 调整屏幕亮度、wifi的调度控制，降低功耗。
-2. 修改TFT_eSpi库消除开机之后的`花屏`。
-3. 在原有rgb播放功能不变的前提下，增加mjpeg的视频播放功能，提高视频帧率到20fps。
+<details>
+<summary><b>v2.1.x</b></summary>
 
-##### HoloCubic_AIO固件_v1.5.x.bin
-1. 新增视频播放(持续改进中)。
-2. 新增MPU6050校准，实现对带倾角底座的兼容。
-3. 相册功能支持jpg、bin双格式。
-4. 新增思维动画APP。
-5. 加速开机显示。
+- Added weather font library
+- Added Stock APP
+- Added brightness adjustment threshold to prevent crashes
 
-##### HoloCubic_AIO固件_v1.4.bin
-1. 大量修改程序框架。
-2. 增加屏幕亮度。
-3. 修改原相册切换时"白屏"现象。
+</details>
 
-##### HoloCubic_AIO固件_v1.3.bin
-1. 将wifi配置信息从内存卡移到flash中，实现非相册功能的应用无需依赖内存卡。开机需要使用里面的配置APP在浏览器端配置网络信息。后期升级固件无需重新配置信息。
-2. 调整RBG氛围灯。
-3. 增加内存卡中的`movie`目录（便于后期拓展）。
+<details>
+<summary><b>v2.0.x</b></summary>
 
-##### HoloCubic_AIO_Tool上位機_v1.6.0
-1. 新增多語言支援（繁體中文、英文等）。
-2. 新增工具設定頁面。
-3. 修復MJPEG工具問題，新增視頻轉換日誌和執行緒支援。
-4. 改進ffmpeg命令即時輸出捕獲功能。
-5. 增強輸入檔案的錯誤處理和驗證。
+- Fixed 7-day weather only reading Beijing, modified API, added humidity
+- Support MPU6050 operation direction mapping adjustment
+- Support LittleFS (migrated existing KV storage)
+- SD card SPI support, SD dual mode (pending)
+- Added parameter settings
+- Coordinated screen sharing PC tool adjustment (pending)
+- Fixed 2048 (pending)
+- Support hiding APPs (pending)
+- Fixed BiliBili API and memory leaks
+- Fixed memory leaks caused by missing `lv_style_reset` in all APPs using LVGL
+- New weather supports 3-character city names
+- Added performance mode support
+- Added Heartbeat and Anniversary APPs
 
-### 致谢
-* ESP32内存分布 https://blog.csdn.net/espressif/article/details/112956403
-* 视频播放 https://github.com/moononournation/RGB565_video
-* FTP参考文档 https://blog.csdn.net/zhubao124/article/details/81662775
-* ESP32 arduino运行双核 https://www.yiboard.com/thread-1344-1-1.html
-* 强制门户认证 https://blog.csdn.net/xh870189248/article/details/102892766
-* 感谢`lib`目录下所用到的开源库相关的作者
+</details>
+
+<details>
+<summary><b>v1.9.x</b></summary>
+
+- Major screen sharing APP overhaul, fixed lag issues (thermal protection, medium performance)
+- Added FTP file transfer support (PC tool not updated)
+- Added thermal control in video playback to prevent ESP32 overheating damage
+
+</details>
+
+<details>
+<summary><b>v1.8.x</b></summary>
+
+- Added 2048 game, new weather clock, BiliBili fans APP
+- Modified MPU6050 operations, added two key values
+- Modified image loop playback, fixed clock interface lag
+- Added event queue
+
+</details>
+
+<details>
+<summary><b>v1.7.x</b></summary>
+
+- Added screen sharing and Settings APP
+- Added APP names
+- Added screen brightness and orientation adjustment in WebServer
+- Enhanced video and photo album orientation switching support
+- Fixed Idea APP graphics not clearing causing overlapping
+- Fixed memory release issues in some APPs
+- Changed weather icons to QWeather icons
+
+</details>
+
+<details>
+<summary><b>v1.6.x</b></summary>
+
+- Adjusted screen brightness and WiFi scheduling to reduce power consumption
+- Modified TFT_eSPI library to eliminate boot screen artifacts
+- Added MJPEG video playback while maintaining RGB playback, increased video frame rate to 20fps
+
+</details>
+
+<details>
+<summary><b>v1.5.x</b></summary>
+
+- Added video playback (continuous improvement)
+- Added MPU6050 calibration for tilted base compatibility
+- Photo album supports both JPG and BIN formats
+- Added Idea animation APP
+- Accelerated boot display
+
+</details>
+
+<details>
+<summary><b>v1.4</b></summary>
+
+- Major framework modifications
+- Added screen brightness control
+- Fixed photo album "white screen" phenomenon during switching
+
+</details>
+
+<details>
+<summary><b>v1.3</b></summary>
+
+- Moved WiFi configuration from SD card to flash (non-album APPs no longer require SD card)
+- Adjusted RGB ambient lighting
+- Added `movie/` directory to SD card structure
+
+</details>
+
+### PC Tool Updates
+
+<details>
+<summary><b>HoloCubic_AIO_Tool v1.6.0</b></summary>
+
+- Added multi-language support (Traditional Chinese, English, etc.)
+- Added tool settings page
+- Fixed MJPEG tool issues, added video conversion log and thread support
+- Improved ffmpeg command real-time output capture
+- Enhanced input file error handling and validation
+
+</details>
+
+---
+
+## 🙏 Acknowledgments
+
+### Technical References
+- **ESP32 Memory Distribution**: https://blog.csdn.net/espressif/article/details/112956403
+- **Video Playback**: https://github.com/moononournation/RGB565_video
+- **FTP Implementation**: https://blog.csdn.net/zhubao124/article/details/81662775
+- **ESP32 Arduino Dual-Core**: https://www.yiboard.com/thread-1344-1-1.html
+- **Captive Portal Authentication**: https://blog.csdn.net/xh870189248/article/details/102892766
+
+### Open Source Libraries
+Special thanks to all authors of open-source libraries used in the `lib/` directory.
+
+---
+
+## 📄 License
+
+This project is open-source. If you use this project for secondary development or partial reference, please provide appropriate attribution.
+
+---
+
+**Made with ❤️ by the HoloCubic AIO Community**
 
