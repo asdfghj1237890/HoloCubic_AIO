@@ -279,7 +279,9 @@ class ImagesConverter(object):
                 print(err)
 
             print("正在转换图片 {} ...".format(os.path.basename(images_path)))
+            output_file = None
             if self.__jpg_enable_val.get() == 1:
+                output_file = os.path.join(ROOT_PATH, os.path.basename(input_path))
                 shutil.copy(input_path, ROOT_PATH)
             else:
                 color_format = color_dict[self.m_color_select.get()]
@@ -288,12 +290,17 @@ class ImagesConverter(object):
                 print("output_format = ", output_format)
                 if output_format == -1:
                     out_obj = Converter(input_path, True, color_format)
-                    out_obj.get_c_code_file(outpath=ROOT_PATH)
+                    output_file = out_obj.get_c_code_file(outpath=ROOT_PATH)
                 else:
-                    pass
                     print(input_path)
                     out_obj = Converter(input_path, True, output_format)
-                    out_obj.get_bin_file(outpath=ROOT_PATH)
+                    output_file = out_obj.get_bin_file(outpath=ROOT_PATH)
+            
+            if output_file:
+                abs_output_path = os.path.abspath(output_file)
+                print(f"输出文件路径: {abs_output_path}")
+                print(f"Output file path: {abs_output_path}")
+            
             self.m_tip_label.configure(text=self.i18n.t("convert_complete"))
             print(self.i18n.t("convert_complete"))
 
@@ -311,7 +318,7 @@ class ImagesConverter(object):
         self.m_project_info = tk.Text(father, height=30, width=140)
         self.m_project_info.tag_configure('bold_italics',
                                           font=('Arial', 12, 'bold', 'italic'))
-        self.m_project_info.tag_configure('big', font=('Verdana', 16, 'bold'))
+        self.m_project_info.tag_configure('big', font=('Verdana', 13))
         self.m_project_info.tag_configure('color', foreground='#476042',
                                           font=('Tempus Sans ITC', 12, 'bold'))
 

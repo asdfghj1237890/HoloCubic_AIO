@@ -27,7 +27,7 @@ def get_resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-TOOL_VERSION = "v1.6.0"
+TOOL_VERSION = "v1.6.2"
 ROOT_PATH = "OutFile"
 CACHE_PATH = "Cache"
 
