@@ -76,9 +76,9 @@ class ImagesConverter(object):
         self.init_image_path(self.m_path_frame)
         self.m_path_frame.pack(side=tk.TOP, pady=5)
 
-        self.m_info_frame = tk.Frame(self.__father, bg=father["bg"])
+        self.m_info_frame = tk.LabelFrame(self.__father, text="Conversion Log", bg="white")
         self.init_info(self.m_info_frame)
-        self.m_info_frame.pack(side=tk.TOP, pady=5)
+        self.m_info_frame.pack(side=tk.TOP, pady=5, fill=tk.BOTH, expand=True)
 
     def init_setting(self, father):
         """
@@ -238,7 +238,7 @@ class ImagesConverter(object):
         self.__father.update()
         images_path = self.m_image_path_val.get().strip()
         if images_path == None:
-            print("Error: could not load image")
+            self.log_message("Error: could not load image", 'error')
             return 0
 
         # 设计的图片地址栏如果是选择的话只有一张图片
@@ -247,7 +247,7 @@ class ImagesConverter(object):
             # 循环处理每张照片
             img_path = img_path.strip()
             if img_path == "":
-                print("路径为空")
+                self.log_message("Error: Path is empty", 'error')
                 return False
 
             input_path = None  # 真正参与转化的图片
@@ -268,17 +268,14 @@ class ImagesConverter(object):
                     input_path = img_path
                 else:
                     new_filename = os.path.basename(img_path).split('.')[0] + save_suffix
-                    print(new_filename)
+                    self.log_message(f"Resizing image to: {new_filename}")
                     input_path = os.path.join(ROOT_PATH, CACHE_PATH, new_filename)
                     new_im = src_im.resize((width, height))
                     new_im.save(input_path, quality=95)  # , format='JPEG', quality=95
-                    # print("Look: ", input_path)
-                    # src_im.save(input_path)
-                    # print("Finish.\n")
             except Exception as err:
-                print(err)
+                self.log_message(f"Error: {err}", 'error')
 
-            print("正在转换图片 {} ...".format(os.path.basename(images_path)))
+            self.log_message(f"Converting image: {os.path.basename(img_path)} ...")
             output_file = None
             if self.__jpg_enable_val.get() == 1:
                 output_file = os.path.join(ROOT_PATH, os.path.basename(input_path))
@@ -286,23 +283,35 @@ class ImagesConverter(object):
             else:
                 color_format = color_dict[self.m_color_select.get()]
                 output_format = output_dict[self.m_output_select.get()]
-                print("color_format = ", color_format)
-                print("output_format = ", output_format)
+                self.log_message(f"Color format: {color_format}")
+                self.log_message(f"Output format: {output_format}")
                 if output_format == -1:
                     out_obj = Converter(input_path, True, color_format)
                     output_file = out_obj.get_c_code_file(outpath=ROOT_PATH)
                 else:
-                    print(input_path)
+                    self.log_message(f"Input path: {input_path}")
                     out_obj = Converter(input_path, True, output_format)
                     output_file = out_obj.get_bin_file(outpath=ROOT_PATH)
             
             if output_file:
                 abs_output_path = os.path.abspath(output_file)
-                print(f"输出文件路径: {abs_output_path}")
-                print(f"Output file path: {abs_output_path}")
+                self.log_message(f"Output file path: {abs_output_path}")
             
             self.m_tip_label.configure(text=self.i18n.t("convert_complete"))
-            print(self.i18n.t("convert_complete"))
+            self.log_message(self.i18n.t("convert_complete"))
+
+    def log_message(self, message, tag='normal'):
+        """
+        Append log message to the info text widget
+        :param message: message to log
+        :param tag: text tag for formatting
+        :return: None
+        """
+        self.m_project_info.config(state=tk.NORMAL)
+        self.m_project_info.insert(tk.END, message + '\n', tag)
+        self.m_project_info.see(tk.END)
+        self.m_project_info.config(state=tk.DISABLED)
+        self.__father.update()
 
     def init_info(self, father):
         """
@@ -310,19 +319,23 @@ class ImagesConverter(object):
         :param father: 父容器
         :return: None
         """
-        info_width = father.winfo_width()
-        info_height = father.winfo_height() / 2
-
         info = self.i18n.t("image_converter_info")
 
-        self.m_project_info = tk.Text(father, height=30, width=140)
+        scrollbar = tk.Scrollbar(father)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        self.m_project_info = tk.Text(father, width=100, yscrollcommand=scrollbar.set, wrap=tk.WORD)
         self.m_project_info.tag_configure('bold_italics',
                                           font=('Arial', 12, 'bold', 'italic'))
         self.m_project_info.tag_configure('big', font=('Verdana', 13))
         self.m_project_info.tag_configure('color', foreground='#476042',
                                           font=('Tempus Sans ITC', 12, 'bold'))
+        self.m_project_info.tag_configure('normal', font=('Courier', 10))
+        self.m_project_info.tag_configure('error', foreground='red', font=('Courier', 10))
 
-        self.m_project_info.pack()
+        self.m_project_info.pack(padx=5, pady=5, fill=tk.BOTH, expand=True)
+        scrollbar.config(command=self.m_project_info.yview)
+        
         self.m_project_info.config(state=tk.NORMAL)
         self.m_project_info.insert(tk.END, info, 'big')
         self.m_project_info.config(state=tk.DISABLED)
