@@ -22,15 +22,14 @@
 
 ## 👥 开发团队
 
-* **AIO框架与核心应用**: [ClimbSnail](https://github.com/ClimbSnail)
+* **AIO框架与核心应用**: [ClimbSnail](https://github.com/ClimbSnail), [asdfghj1237890](https://github.com/asdfghj1237890)
 * **2048游戏**: [AndyXFuture](https://github.com/AndyXFuture)
-* **新版天气时钟**: [PuYuuu](https://github.com/PuYuuu)
+* **新版天气时钟**: [PuYuuu](https://github.com/PuYuuu), [asdfghj1237890](https://github.com/asdfghj1237890)
 * **BiliBili粉丝应用**: [cnzxo](https://github.com/cnzxo/)
-* **纪念日与心跳应用**: [WoodwindHu](https://github.com/WoodwindHu)
+* **纪念日与心跳应用**: [WoodwindHu](https://github.com/WoodwindHu), [asdfghj1237890](https://github.com/asdfghj1237890)
 * **PC资源监控**: [Jumping99](https://github.com/Jumping99)
 * **多功能动画**: [LHYHHD](https://github.com/LHYHHD)
-* **股票应用**: redwolf
-* 更多开发者持续加入中...
+* **股票应用**: [redwolf](https://github.com/redwolf), [asdfghj1237890](https://github.com/asdfghj1237890)
 
 ---
 

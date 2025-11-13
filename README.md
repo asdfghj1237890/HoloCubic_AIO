@@ -22,14 +22,14 @@ This firmware is fully open-source for learning and experimentation. If you use 
 
 ## 👥 Development Team
 
-* **AIO Framework & Core Apps**: [ClimbSnail](https://github.com/ClimbSnail)
+* **AIO Framework & Core Apps**: [ClimbSnail](https://github.com/ClimbSnail), [asdfghj1237890](https://github.com/asdfghj1237890)
 * **2048 Game**: [AndyXFuture](https://github.com/AndyXFuture)
-* **New Weather Clock**: [PuYuuu](https://github.com/PuYuuu)
+* **New Weather Clock**: [PuYuuu](https://github.com/PuYuuu), [asdfghj1237890](https://github.com/asdfghj1237890)
 * **BiliBili Fans App**: [cnzxo](https://github.com/cnzxo/)
-* **Anniversary & Heartbeat Apps**: [WoodwindHu](https://github.com/WoodwindHu)
+* **Anniversary & Heartbeat Apps**: [WoodwindHu](https://github.com/WoodwindHu), [asdfghj1237890](https://github.com/asdfghj1237890)
 * **PC Resource Monitor**: [Jumping99](https://github.com/Jumping99)
 * **Multi-function Animation**: [LHYHHD](https://github.com/LHYHHD)
-* **Stock App**: redwolf
+* **Stock App**: [redwolf](https://github.com/redwolf), [asdfghj1237890](https://github.com/asdfghj1237890)
 * More developers joining...
 
 ---
