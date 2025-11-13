@@ -551,10 +551,19 @@ python Script/get_font.py path/to/font_file.c
 
 ## 📝 Version History
 
-**Current Version**: `v2.3.0`
+**Current Version**: `v2.5.0`
 
 <details>
-<summary><b>v2.3.x</b> - Latest</summary>
+<summary><b>v2.5.x</b> - Latest</summary>
+
+### Firmware Changes
+- **Icons**: Updated app icons for screen share, media player, picture album, weather, etc.
+- **Documentation**: README improvements and corrections
+
+</details>
+
+<details>
+<summary><b>v2.3.x</b></summary>
 
 ### Firmware Changes
 - **Stock**: Refactored data processing & UI, added international market support, fixed memory leaks
@@ -672,6 +681,14 @@ python Script/get_font.py path/to/font_file.c
 </details>
 
 ### PC Tool Updates
+
+<details>
+<summary><b>HoloCubic_AIO_Tool v1.6.2</b> - Latest</summary>
+
+- Fixed BGR color channel issue in photo conversion tool
+- Improved UX in photo transform tool
+
+</details>
 
 <details>
 <summary><b>HoloCubic_AIO_Tool v1.6.0</b></summary>

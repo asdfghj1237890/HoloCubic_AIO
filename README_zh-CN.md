@@ -565,10 +565,19 @@ python Script/get_font.py 字模文件路径.c
 
 ## 📝 版本历史
 
-**当前版本**：`v2.3.0`
+**当前版本**：`v2.5.0`
 
 <details>
-<summary><b>v2.3.x</b> - 最新版本</summary>
+<summary><b>v2.5.x</b> - 最新版本</summary>
+
+### 固件更新
+- **图标**：更新屏幕分享、媒体播放器、相册和天气应用等APP的图标
+- **文档**：README改进和修正
+
+</details>
+
+<details>
+<summary><b>v2.3.x</b></summary>
 
 ### 固件更新
 - **股票**：重构数据处理与UI，新增国际股市支持，修复内存泄漏
@@ -686,6 +695,14 @@ python Script/get_font.py 字模文件路径.c
 </details>
 
 ### 上位机工具更新
+
+<details>
+<summary><b>HoloCubic_AIO_Tool v1.6.2</b> - 最新版本</summary>
+
+- 修复图片转换工具的BGR颜色通道问题
+- 改进图片转换工具的用户体验
+
+</details>
 
 <details>
 <summary><b>HoloCubic_AIO_Tool v1.6.0</b></summary>
