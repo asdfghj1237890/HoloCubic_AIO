@@ -58,7 +58,7 @@
 4. **网页配置**：通过网页界面进行配网及各项设置（详见应用介绍）
 5. **多种访问方式**：支持IP地址访问或域名直接访问 http://holocubic（部分浏览器可能支持不佳）
 6. **远程文件管理**：通过网页界面上传/删除SD卡文件，无需物理拔插
-7. **完整的PC工具**：提供全套上位机软件及开源代码：https://github.com/ClimbSnail/HoloCubic_AIO_Tool
+7. **完整的PC工具**：提供全套上位机软件及开源代码：https://github.com/asdfghj1237890/HoloCubic_AIO/tree/v2.0.2/AIO_Tool
 
 ### 📺 演示视频
 
@@ -78,7 +78,7 @@
 
 ## 🔧 固件刷写（无需IDE环境）
 
-从QQ群下载上位机工具进行固件刷写。
+从Release頁面下载上位机工具进行固件刷写。
 
 ### 所需文件
 
@@ -97,8 +97,6 @@
 4. 刷写固件
 
 **视频教程**: https://b23.tv/5e6uDh
-
-**开源上位机工具**: https://github.com/ClimbSnail/HoloCubic_AIO_Tool
 
 <details>
 <summary>🖼️ 工具截图</summary>
@@ -173,6 +171,7 @@
   - 相册参数
   - 播放器设置
   - 自启动应用配置
+- **开发者**：ClimbSnail, asdfghj1237890
 
 **首次设置**：连接电脑到HoloCubic的WiFi热点，然后通过网页界面进行配置。
 
@@ -241,12 +240,18 @@
 <summary><b>🌤️ 天气与时钟（Weather）</b></summary>
 
 #### 新版天气（weather）
-- **API**：高德天气API
+- **API**：AccuWeather API
 - **运行条件**：联网状态
 - **设置**：
-  - 配置城市代码：[高德城市代码](https://lbs.amap.com/api/webservice/download)
-  - 获取API密钥：[高德密钥申请](https://lbs.amap.com/api/webservice/create-project-and-key)
+  - 配置城市名称（英文）：例如 Beijing、Taipei、Tokyo 等
+  - 获取API密钥：[AccuWeather API申请](https://developer.accuweather.com/)
+  - 留空城市名称可自动使用IP检测位置
 - **界面**：模仿`misaka`时钟界面
+- **注意**：
+  - 免费版每日限制50次请求，请合理设置更新频率
+  - Location Key会自动缓存，无需手动配置
+  - 详细迁移说明：`AIO_Firmware_PIO/src/app/weather/ACCUWEATHER_MIGRATION_zh-CN.md`
+- **开发者**：PuYuu, asdfghj1237890
 
 #### 旧版天气（weather old）
 - **API**：心知天气API（v3版本）
@@ -330,8 +335,24 @@
 <summary><b>📈 股票行情（Stock）</b></summary>
 
 - **运行条件**：WiFi已配置，USB供电充足
-- **设置**：通过WebServer配置股票代码
-- **开发者**：redwolf
+- **支持市场**：
+  - 中国股市（CN）- 沪深交易所
+  - 美国股市（US）- NASDAQ、NYSE等
+  - 香港股市（HK）- 港交所
+- **数据来源**：
+  - 国内市场：新浪财经API
+  - 国际市场：Yahoo Finance API
+- **设置步骤**：通过WebServer配置
+  1. 输入**股票代码**：
+     - 美股：`AAPL`, `TSLA`, `GOOGL`等
+     - A股：`601126`, `sh601126`, `sz000001`等
+     - 港股：`0700`, `9988`等
+  2. 选择**市场类型**：US/CN/HK
+  3. 设置**更新间隔**（默认10秒）
+- **显示信息**：实时价格、涨跌幅、成交量等
+- **开发者**：redwolf, asdfghj1237890
+
+> 详细配置说明请参见`AIO_Firmware_PIO\src\app\stockmarket\INTERNATIONAL_STOCK_SUPPORT.md`
 
 </details>
 
@@ -427,6 +448,22 @@ with open(out_path, 'wb') as f:
 
 **教程**：https://b23.tv/kibhGD
 
+### 安装 PlatformIO
+
+1. **安装 VS Code**：从 [Visual Studio Code官网](https://code.visualstudio.com/) 下载并安装
+
+2. **安装 PlatformIO 扩展**：
+   - 打开 VS Code
+   - 点击左侧的扩展图标（或按 `Ctrl+Shift+X`）
+   - 搜索 "PlatformIO IDE"
+   - 点击 **Install** 安装扩展
+   - 安装完成后，重启 VS Code
+
+3. **打开项目**：
+   - 在 VS Code 中选择 **File > Open Folder**
+   - 选择 `AIO_Firmware_PIO` 文件夹
+   - PlatformIO 会自动识别项目并安装所需依赖
+
 ### 设置步骤
 
 1. **配置上传端口**：修改`platformio.ini`中的`upload_port`为您的COM口
@@ -453,6 +490,41 @@ if(sck == -1 && miso == -1 && mosi == -1 && ss == -1) {
 ~~这是必要的，因为硬件使用两个硬件SPI连接屏幕和SD卡。HSPI的默认MISO引脚12在ESP32启动时用于设置flash电压，开机前上拉会导致芯片无法启动。我们将其替换为引脚26。~~
 
 </details>
+
+### 编译与上传固件
+
+配置完成后，您可以使用 PlatformIO 编译和上传固件到设备：
+
+#### 方法一：使用 PlatformIO 工具栏
+
+在 VS Code 底部的 PlatformIO 工具栏中：
+
+- **✓ Build**（编译）：点击编译固件，检查代码是否有错误
+- **→ Upload**（上传）：点击编译并上传固件到连接的设备
+- **🔌 Serial Monitor**（串口监视器）：查看设备的调试输出信息
+
+#### 方法二：使用 PlatformIO 侧边栏
+
+1. 点击左侧的 PlatformIO 图标（外星人头像）
+2. 在 **PROJECT TASKS** 下选择您的环境（如 `esp32dev`）
+3. 选择操作：
+   - **Build**：仅编译固件
+   - **Upload**：编译并上传固件
+   - **Upload and Monitor**：上传固件并打开串口监视器
+   - **Clean**：清理编译缓存
+
+#### 方法三：使用命令面板
+
+1. 按 `Ctrl+Shift+P` 打开命令面板
+2. 输入 "PlatformIO"
+3. 选择：
+   - **PlatformIO: Build**：编译项目
+   - **PlatformIO: Upload**：上传到设备
+
+**注意事项**：
+- 上传前确保设备已通过 USB 正确连接
+- 确认 `platformio.ini` 中的 `upload_port` 配置正确
+- 首次编译会下载所需的工具链和库，可能需要较长时间
 
 ---
 

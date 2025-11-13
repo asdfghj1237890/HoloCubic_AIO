@@ -42,7 +42,7 @@ This firmware is fully open-source for learning and experimentation. If you use 
 4. **Web Configuration**: Configure network and settings via web interface (see APP Introduction for details)
 5. **Multiple Access Methods**: Access via IP address or domain name (http://holocubic) - some browsers may have limited support
 6. **Remote File Management**: Upload/delete files on SD card via web interface without physical access
-7. **Complete PC Tools**: Full host software suite with open-source code: https://github.com/ClimbSnail/HoloCubic_AIO_Tool
+7. **Complete PC Tools**: Full host software suite with open-source code: https://github.com/asdfghj1237890/HoloCubic_AIO/tree/v2.0.2/AIO_Tool
 
 ### 📺 Demo
 
@@ -63,7 +63,7 @@ This firmware is fully open-source for learning and experimentation. If you use 
 
 ## 🔧 Firmware Flashing (No IDE Required)
 
-Download the PC tool from the QQ group to flash the firmware.
+Download the PC tool from the release page to flash the firmware.
 
 ### Required Files
 
@@ -82,8 +82,6 @@ Download the PC tool from the QQ group to flash the firmware.
 4. Flash the firmware
 
 **Video Tutorial**: https://b23.tv/5e6uDh
-
-**Open-source PC Tool**: https://github.com/ClimbSnail/HoloCubic_AIO_Tool
 
 <details>
 <summary>🖼️ Tool Screenshots</summary>
@@ -157,6 +155,7 @@ The device uses an MPU6050 gyroscope/accelerometer. For proper initialization:
   - Photo album parameters
   - Player settings
   - Auto-start APP configuration
+- **Developer**: ClimbSnail, asdfghj1237890
 
 **First-time setup**: Connect PC to HoloCubic's WiFi hotspot, then configure via web interface.
 
@@ -225,12 +224,18 @@ The device uses an MPU6050 gyroscope/accelerometer. For proper initialization:
 <summary><b>🌤️ Weather & Clock (天气、时钟)</b></summary>
 
 #### New Version (weather)
-- **API**: Amap Weather API
+- **API**: AccuWeather API
 - **Requirements**: Internet connection
 - **Setup**:
-  - Configure city code: [Amap City Codes](https://lbs.amap.com/api/webservice/download)
-  - Get API key: [Amap Key Creation](https://lbs.amap.com/api/webservice/create-project-and-key)
+  - Configure city name (English): e.g., Beijing, Taipei, Tokyo
+  - Get API key: [AccuWeather API](https://developer.accuweather.com/)
+  - Leave city name empty for automatic IP-based location detection
 - **UI**: Inspired by `misaka` clock interface
+- **Notes**:
+  - Free tier limited to 50 requests/day, adjust update frequency accordingly
+  - Location Key is automatically cached, no manual configuration needed
+  - Migration details: `AIO_Firmware_PIO/src/app/weather/ACCUWEATHER_MIGRATION_EN.md`
+- **Developer**: PuYuu, asdfghj1237890
 
 #### Old Version (weather old)
 - **API**: Seniverse Weather API (v3)
@@ -314,8 +319,24 @@ The device uses an MPU6050 gyroscope/accelerometer. For proper initialization:
 <summary><b>📈 Stock Market (股票行情)</b></summary>
 
 - **Requirements**: WiFi configured, sufficient USB power
-- **Setup**: Configure stock codes via WebServer
-- **Developer**: redwolf
+- **Supported Markets**:
+  - Chinese Market (CN) - Shanghai & Shenzhen Stock Exchanges
+  - US Market (US) - NASDAQ, NYSE, etc.
+  - Hong Kong Market (HK) - HKEX
+- **Data Sources**:
+  - Chinese Market: Sina Finance API
+  - International Markets: Yahoo Finance API
+- **Setup**: Configure via WebServer
+  1. Enter **Stock Symbol**:
+     - US stocks: `AAPL`, `TSLA`, `GOOGL`, etc.
+     - Chinese stocks: `601126`, `sh601126`, `sz000001`, etc.
+     - Hong Kong stocks: `0700`, `9988`, etc.
+  2. Select **Market Type**: US/CN/HK
+  3. Set **Update Interval** (default: 10 seconds)
+- **Display Info**: Real-time price, change percentage, trading volume, etc.
+- **Developer**: redwolf, asdfghj1237890
+
+> See `AIO_Firmware_PIO\src\app\stockmarket\INTERNATIONAL_STOCK_SUPPORT.md` for detailed configuration
 
 </details>
 
@@ -412,6 +433,22 @@ This project is developed using **PlatformIO** on **VSCode** with the **ESP32-Pi
 
 **Tutorial**: https://b23.tv/kibhGD
 
+### Installing PlatformIO
+
+1. **Install VS Code**: Download and install from [Visual Studio Code official website](https://code.visualstudio.com/)
+
+2. **Install PlatformIO Extension**:
+   - Open VS Code
+   - Click the Extensions icon on the left sidebar (or press `Ctrl+Shift+X`)
+   - Search for "PlatformIO IDE"
+   - Click **Install** to install the extension
+   - Restart VS Code after installation completes
+
+3. **Open Project**:
+   - In VS Code, select **File > Open Folder**
+   - Select the `AIO_Firmware_PIO` folder
+   - PlatformIO will automatically recognize the project and install required dependencies
+
 ### Setup Steps
 
 1. **Configure Upload Port**: Modify `upload_port` in `platformio.ini` to match your COM port
@@ -438,6 +475,41 @@ if(sck == -1 && miso == -1 && mosi == -1 && ss == -1) {
 ~~This was necessary because the hardware uses two hardware SPI connections for screen and SD card. HSPI's default MISO pin 12 is used for flash voltage setting during ESP32 boot, and pulling it up before power-on prevents chip startup. We replaced it with pin 26.~~
 
 </details>
+
+### Building and Uploading Firmware
+
+After configuration, you can use PlatformIO to build and upload firmware to your device:
+
+#### Method 1: Using PlatformIO Toolbar
+
+In the PlatformIO toolbar at the bottom of VS Code:
+
+- **✓ Build**: Click to build the firmware and check for code errors
+- **→ Upload**: Click to build and upload firmware to the connected device
+- **🔌 Serial Monitor**: View debug output from the device
+
+#### Method 2: Using PlatformIO Sidebar
+
+1. Click the PlatformIO icon on the left sidebar (alien head icon)
+2. Under **PROJECT TASKS**, select your environment (e.g., `esp32dev`)
+3. Choose an operation:
+   - **Build**: Build firmware only
+   - **Upload**: Build and upload firmware
+   - **Upload and Monitor**: Upload firmware and open serial monitor
+   - **Clean**: Clear build cache
+
+#### Method 3: Using Command Palette
+
+1. Press `Ctrl+Shift+P` to open the command palette
+2. Type "PlatformIO"
+3. Select:
+   - **PlatformIO: Build**: Build the project
+   - **PlatformIO: Upload**: Upload to device
+
+**Important Notes**:
+- Ensure the device is properly connected via USB before uploading
+- Verify that `upload_port` in `platformio.ini` is configured correctly
+- First-time builds will download required toolchains and libraries, which may take some time
 
 ---
 
